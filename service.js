@@ -689,21 +689,24 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
-async function getSetings() {
+async function getSettings() {
     const response = await fetch("http://localhost:3001/settings");
-    if (response.ok)
-        return response.json();
+    return response.json();
 }
-const { active, random, auto, tag } = await getSetings();
-document.body.insertAdjacentHTML("afterbegin", tag);
-const shortsworks = document.querySelector("shorts-works");
-!active && !document.referrer.includes("localhost") && (shortsworks.style.display = "none");
-window.addEventListener("message", (event) => {
-    if (event.data.title === "document") {
-        window.parent.postMessage({ title: "document", document: JSON.parse(JSON.stringify(document.body.innerHTML)) }, "*");
-    }
-    if (event.data.title === "atrributes") {
-        const attributes = event.data.attributes;
-        Object.entries(attributes).map(([attribute, value]) => shortsworks.setAttribute(attribute, value));
-    }
-});
+async function attachShortsworks() {
+    const { active, random, auto, tag } = await getSettings();
+    document.body.insertAdjacentHTML("afterbegin", tag);
+    const shortsworks = document.querySelector("shorts-works");
+    !active && !document.referrer.includes("localhost") && (shortsworks.style.display = "none");
+    // preview 모드임이 인식되면 활성화
+    window.addEventListener("message", (event) => {
+        if (event.data.title === "document") {
+            window.parent.postMessage({ title: "document", document: JSON.parse(JSON.stringify(document.body.innerHTML)) }, "*");
+        }
+        if (event.data.title === "atrributes") {
+            const attributes = event.data.attributes;
+            Object.entries(attributes).map(([attribute, value]) => shortsworks.setAttribute(attribute, value));
+        }
+    });
+}
+attachShortsworks();
