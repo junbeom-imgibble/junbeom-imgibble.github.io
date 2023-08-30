@@ -664,6 +664,7 @@ customElements.define("shorts-works", class extends HTMLElement {
         super(...arguments);
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
+        // changedCallback 관련 해결책 필요
         this.mount = false;
     }
     async connectedCallback() {
@@ -720,6 +721,7 @@ async function attachShortsworks() {
     if (document.referrer.includes("localhost")) {
         // 모바일에서는 touch도 필요
         let prevSelectedElement = document.body;
+        document.body.innerHTML = document.body.innerHTML;
         document.body.onclick = (event) => {
             prevSelectedElement.classList.remove("selected");
             const currentSelectedElement = event.target;
