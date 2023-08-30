@@ -738,7 +738,7 @@ async function attachShortsworks() {
             // tag가 아닌 current-tag로 삽입
             currentSelectedElement.insertAdjacentHTML("afterend", tag);
             prevSelectedElement = currentSelectedElement;
-            window.parent.postMessage({ title: "currentSelectedElement", position: currentSelectedElement.outerHTML }, "*");
+            window.parent.postMessage({ title: "currentSelectedElement", position: JSON.stringify(currentSelectedElement.outerHTML) }, "*");
         };
         // 메세지 수신 관련 이벤트 모음
         window.addEventListener("message", (messageEvent) => {
@@ -755,6 +755,7 @@ async function attachShortsworks() {
             }
         });
     }
-    document.body.innerHTML = document.body.innerHTML.replace(position, tag);
+    // 변경된 지점 파악
+    document.body.innerHTML = document.body.innerHTML.replace(position, position + tag);
 }
 attachShortsworks();
