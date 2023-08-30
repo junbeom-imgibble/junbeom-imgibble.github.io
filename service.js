@@ -1,3 +1,11 @@
+const backendURL = "http://localhost:3001";
+
+async function getStories() {
+    const response = await fetch(backendURL + "/publish");
+    if (response.ok)
+        return response.json();
+}
+
 // WIDGET
 function getDOM(element) {
     return element.getRootNode();
@@ -656,10 +664,10 @@ customElements.define("shorts-works", class extends HTMLElement {
         super(...arguments);
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
-        this.stories = stories;
         this.mount = false;
     }
     async connectedCallback() {
+        this.stories = await getStories();
         this.storyStore = new StoryStore(this);
         this.DOM.innerHTML = `
             <sw-story-container></sw-story-container>
@@ -681,14 +689,6 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
-const backendURL = "http://localhost:3001";
-
-async function getStories() {
-    const response = await fetch(backendURL + "/publish");
-    if (response.ok)
-        return response.json();
-}
-
 console.log("attached");
 // service 의 style 관련
 // preview 모드일 때만 하여 활성화
@@ -699,15 +699,15 @@ async function getSettings() {
     const response = await fetch("http://localhost:3001/settings");
     return response.json();
 }
-let stories;
+// export let stories
 // 프리뷰 모드와 실제 attach 부분을 분할 필요
 // 즉시 실행
-async function initialize() {
-    // 만일 스토리마다 stories가 다를 경우에는 ?
-    // 게시 순서 랜덤일 경우, story 섞음 => 위젯에서 비동기로 가져오는 처리 service 에서 관리하도록 변경
-    stories = await getStories();
-}
-initialize();
+// async function initialize() {
+// 만일 스토리마다 stories가 다를 경우에는 ?
+// 게시 순서 랜덤일 경우, story 섞음 => 위젯에서 비동기로 가져오는 처리 service 에서 관리하도록 변경
+// stories = await getStories()
+// }
+// initialize()
 async function attachShortsworks() {
     // 전역 스코프에서 적용하면 좋으나 처음 값을 비동기로 받음으로 비동기 함수 내부
     const { active, random, auto, tag } = await getSettings();
@@ -750,5 +750,3 @@ async function attachShortsworks() {
     });
 }
 attachShortsworks();
-
-export { stories };
