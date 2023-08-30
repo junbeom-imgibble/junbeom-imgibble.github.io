@@ -1,11 +1,3 @@
-const backendURL = "http://localhost:3001";
-
-async function getStories() {
-    const response = await fetch(backendURL + "/publish");
-    if (response.ok)
-        return response.json();
-}
-
 // WIDGET
 function getDOM(element) {
     return element.getRootNode();
@@ -664,10 +656,10 @@ customElements.define("shorts-works", class extends HTMLElement {
         super(...arguments);
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
+        this.stories = stories;
         this.mount = false;
     }
     async connectedCallback() {
-        this.stories = await getStories();
         this.storyStore = new StoryStore(this);
         this.DOM.innerHTML = `
             <sw-story-container></sw-story-container>
@@ -689,24 +681,73 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
+const backendURL = "http://localhost:3001";
+
+async function getStories() {
+    const response = await fetch(backendURL + "/publish");
+    if (response.ok)
+        return response.json();
+}
+
+// service 의 style 관련
+// preview 모드일 때만 하여 활성화
+const styles = document.createElement("style");
+styles.innerHTML = `.selected { border: 1px solid red; }`;
+document.body.insertAdjacentElement("beforeend", styles);
 async function getSettings() {
     const response = await fetch("http://localhost:3001/settings");
     return response.json();
 }
+let stories;
+// 프리뷰 모드와 실제 attach 부분을 분할 필요
+// 즉시 실행
+async function initialize() {
+    // 만일 스토리마다 stories가 다를 경우에는 ?
+    // 게시 순서 랜덤일 경우, story 섞음 => 위젯에서 비동기로 가져오는 처리 service 에서 관리하도록 변경
+    stories = await getStories();
+}
+initialize();
 async function attachShortsworks() {
+    // 전역 스코프에서 적용하면 좋으나 처음 값을 비동기로 받음으로 비동기 함수 내부
     const { active, random, auto, tag } = await getSettings();
-    document.body.insertAdjacentHTML("afterbegin", tag);
+    // 지정된 위치에 import 하도록 변경
+    // document.body.insertAdjacentHTML("afterbegin", tag)
     const shortsworks = document.querySelector("shorts-works");
     !active && !document.referrer.includes("localhost") && (shortsworks.style.display = "none");
+    // 프리뷰 모드임을 확인하는 훅도 분리 필요
+    // 프리뷰 모드일 때 클릭한 부분의 엘리먼트를 확인하는 로직 필요
+    if (document.referrer.includes("localhost")) {
+        // 모바일에서는 touch도 필요
+        let prevSelectedElement = document.body;
+        document.body.onclick = (event) => {
+            prevSelectedElement.classList.remove("selected");
+            const currentSelectedElement = event.target;
+            // style을 직접 주는 것은 기존 설정에 문제가 발생할 수 있으므로 add Class 이용
+            // 삽입하는 부분, 기존 프리뷰 위치는 제거
+            // 위취가 변경되면 상태가 변경되고 있음
+            const prevElement = document.querySelector("shorts-works");
+            if (prevElement !== null)
+                prevElement.remove();
+            currentSelectedElement.classList.add("selected");
+            // tag가 아닌 current-tag로 삽입
+            currentSelectedElement.insertAdjacentHTML("afterend", tag);
+            prevSelectedElement = currentSelectedElement;
+            console.log(currentSelectedElement);
+        };
+    }
     // preview 모드임이 인식되면 활성화
     window.addEventListener("message", (event) => {
         if (event.data.title === "document") {
             window.parent.postMessage({ title: "document", document: JSON.parse(JSON.stringify(document.body.innerHTML)) }, "*");
         }
+        // 오타 처리 필요
         if (event.data.title === "atrributes") {
             const attributes = event.data.attributes;
+            const shortsworks = document.querySelector("shorts-works");
             Object.entries(attributes).map(([attribute, value]) => shortsworks.setAttribute(attribute, value));
         }
     });
 }
 attachShortsworks();
+
+export { stories };
