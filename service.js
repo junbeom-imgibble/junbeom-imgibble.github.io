@@ -689,6 +689,7 @@ async function getStories() {
         return response.json();
 }
 
+console.log("attached");
 // service 의 style 관련
 // preview 모드일 때만 하여 활성화
 const styles = document.createElement("style");
