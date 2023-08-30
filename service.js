@@ -690,13 +690,6 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
-// 랜덤일 경우 service 에서 백엔드에서 받은 stories 데이터 filtering 필요
-const serverData = {};
-// preview를 위한 current store
-const currentPreview = {
-    tag: "<shorts-works></shorts-works>",
-    position: ""
-};
 // service 의 style 관련
 // preview 모드일 때만 하여 활성화
 const styles = document.createElement("style");
@@ -765,5 +758,3 @@ async function attachShortsworks() {
     document.body.innerHTML = document.body.innerHTML.replace(position, tag);
 }
 attachShortsworks();
-
-export { currentPreview, serverData };
