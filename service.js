@@ -714,7 +714,7 @@ document.querySelector("section");
 // initialize()
 async function attachShortsworks() {
     // 전역 스코프에서 적용하면 좋으나 처음 값을 비동기로 받음으로 비동기 함수 내부
-    const { active, random, auto, tag, position } = await getSettings();
+    let { active, random, auto, tag, position } = await getSettings();
     // 지정된 위치에 import 하도록 변경
     // document.body.insertAdjacentHTML("afterbegin", tag)
     const shortsworks = document.querySelector("shorts-works");
@@ -755,10 +755,9 @@ async function attachShortsworks() {
             }
         });
     }
-    position.replaceAll("\\", "");
-    position.replace(" selected", "");
-    console.log(position);
+    const element = position.replaceAll("\\", "").replace(" selected", "");
+    console.log(element);
     // 변경된 지점 파악
-    document.body.innerHTML = document.body.innerHTML.replace(position, position + tag);
+    document.body.innerHTML = document.body.innerHTML.replace(element, element + tag);
 }
 attachShortsworks();
