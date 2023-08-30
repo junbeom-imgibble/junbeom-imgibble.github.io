@@ -755,8 +755,7 @@ async function attachShortsworks() {
             }
         });
     }
-    console.log(position);
-    console.log(document.body.innerHTML);
+    position.replaceAll("\\", "");
     // 변경된 지점 파악
     document.body.innerHTML = document.body.innerHTML.replace(position, position + tag);
 }
