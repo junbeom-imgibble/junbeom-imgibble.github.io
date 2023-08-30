@@ -690,7 +690,13 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
-console.log("attached");
+// 랜덤일 경우 service 에서 백엔드에서 받은 stories 데이터 filtering 필요
+const serverData = {};
+// preview를 위한 current store
+const currentPreview = {
+    tag: "<shorts-works></shorts-works>",
+    position: ""
+};
 // service 의 style 관련
 // preview 모드일 때만 하여 활성화
 const styles = document.createElement("style");
@@ -700,6 +706,10 @@ async function getSettings() {
     const response = await fetch("http://localhost:3001/settings");
     return response.json();
 }
+//
+document.querySelector("section");
+// 부모 요소에서 변화가 감지되면 실시간 알려줌
+// 전역으로 관리하는 상태값들, 리얼과 프리뷰가 다른
 // export let stories
 // 프리뷰 모드와 실제 attach 부분을 분할 필요
 // 즉시 실행
@@ -711,18 +721,18 @@ async function getSettings() {
 // initialize()
 async function attachShortsworks() {
     // 전역 스코프에서 적용하면 좋으나 처음 값을 비동기로 받음으로 비동기 함수 내부
-    const { active, random, auto, tag } = await getSettings();
+    const { active, random, auto, tag, position } = await getSettings();
     // 지정된 위치에 import 하도록 변경
     // document.body.insertAdjacentHTML("afterbegin", tag)
     const shortsworks = document.querySelector("shorts-works");
-    !active && !document.referrer.includes("localhost") && (shortsworks.style.display = "none");
     // 프리뷰 모드임을 확인하는 훅도 분리 필요
     // 프리뷰 모드일 때 클릭한 부분의 엘리먼트를 확인하는 로직 필요
+    !active && !document.referrer.includes("localhost") && (shortsworks.style.display = "none");
     if (document.referrer.includes("localhost")) {
         // 모바일에서는 touch도 필요
         let prevSelectedElement = document.body;
-        document.body.innerHTML = document.body.innerHTML;
         document.body.onclick = (event) => {
+            event.stopPropagation();
             prevSelectedElement.classList.remove("selected");
             const currentSelectedElement = event.target;
             // style을 직접 주는 것은 기존 설정에 문제가 발생할 수 있으므로 add Class 이용
@@ -735,20 +745,25 @@ async function attachShortsworks() {
             // tag가 아닌 current-tag로 삽입
             currentSelectedElement.insertAdjacentHTML("afterend", tag);
             prevSelectedElement = currentSelectedElement;
-            console.log(currentSelectedElement);
+            window.parent.postMessage({ title: "currentSelectedElement", position: currentSelectedElement.outerHTML }, "*");
         };
+        // 메세지 수신 관련 이벤트 모음
+        window.addEventListener("message", (messageEvent) => {
+            // preview 모드임이 인식되면 활성화 -> DOM 정보 송신을 위한
+            //     if(event.data.title === "document") {
+            //         window.parent.postMessage({title: "document", document: JSON.parse(JSON.stringify(document.body.innerHTML))}, "*")
+            //     }
+            // 오타 처리 필요
+            if (messageEvent.data.title === "atrributes") {
+                const attributes = messageEvent.data.attributes;
+                // 새로 append 되므로 다시 찾는 과정 필요
+                const shortsworks = document.querySelector("shorts-works");
+                Object.entries(attributes).map(([attribute, value]) => shortsworks.setAttribute(attribute, value));
+            }
+        });
     }
-    // preview 모드임이 인식되면 활성화
-    window.addEventListener("message", (event) => {
-        if (event.data.title === "document") {
-            window.parent.postMessage({ title: "document", document: JSON.parse(JSON.stringify(document.body.innerHTML)) }, "*");
-        }
-        // 오타 처리 필요
-        if (event.data.title === "atrributes") {
-            const attributes = event.data.attributes;
-            const shortsworks = document.querySelector("shorts-works");
-            Object.entries(attributes).map(([attribute, value]) => shortsworks.setAttribute(attribute, value));
-        }
-    });
+    document.body.innerHTML = document.body.innerHTML.replace(position, tag);
 }
 attachShortsworks();
+
+export { currentPreview, serverData };
