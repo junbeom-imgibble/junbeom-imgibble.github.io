@@ -34,27 +34,27 @@ var init = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scroll
 
 var icon = ".icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 1;\n    color: rgba(255, 255, 255, 0.48);\n    position: relative;\n    height: 16px;\n    width: 16px;\n\n}\n\n@media (max-width: 768px) {\n    .icon {\n        height: 32px;\n        width: 32px;\n    }\n}\n\n.icon:hover {\n    color: white\n}\n\n.icon-container {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    justify-content: end;\n    gap: 4px;\n}\n\n.outer-close {\n    position: absolute;\n    top: 0;\n    right: 0;\n    height: 32px;\n    width: 32px;\n}\n\n@media (max-width: 768px) {\n    .outer-close {\n        display: none;\n    }\n}\n\n.arrow {\n    position: relative;\n    height: 32px;\n    width: 32px;\n}\n\n.heart {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.share {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}";
 
-var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n}\n\n.slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.axis {\n    align-items: center;\n    /*justify-content: center;*/\n\n    position: absolute;\n    display: flex;\n    width: 0;\n    height: 0;\n}";
+var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n}\n\n.slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}";
 
 var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    gap: 20px;\n}";
 
 var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    display: flex;\n    justify-content: center;\n    width: 100px;\n\n    padding: 0.25rem;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n    border-radius: 50%;\n\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}";
 
-var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
+var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n}\n\n.shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
 
-var viewContainer = ".view-container {\n    position: relative;\n    left: 0;\n\n    display: flex;\n    flex-direction: row;\n\n    height: fit-content;\n    \n    gap: 160px;\n}\n\n@media (max-width: 768px) {\n    .view-container {\n        gap: 0;\n    }\n}";
+var embed = ".embed {\n    width: 200px;\n    position: relative;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    background-color: #000000;\n}\n\n.embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n}";
 
-var view = ".view {\n    cursor: pointer;\n    position: relative;\n    border-radius: 6px;\n    aspect-ratio: 9/16;\n    box-sizing: border-box;\n    display: flex;\n    align-items: center;\n    background-color: black;\n    justify-content: center;\n\n    width: 200px;\n    transition: transform 0.4s;\n}\n\n@media (max-width: 768px) {\n    .view {\n        width: 100vw;\n        height: 100vh;\n    }\n}\n\n.view-inner {\n    position: relative;\n    height: 100%;\n    width: 100%;\n    border-radius: 6px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n    opacity: 0.1;\n}";
+var viewContainer = ".view-container {\n    position: relative;\n    left: 0;\n\n    display: flex;\n    flex-direction: row;\n\n\n    width: 200px;\n    aspect-ratio: 9/16;\n    gap: 160px;\n}\n\n@container slider (max-width: 768px) {\n    .view-container {\n        width: 100%;\n        height: 100%;\n        gap: 0;\n    }\n}";
 
-var screen = ".screen {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n}\n\n.content {\n    position: relative;\n    width: 100%;    \n    object-fit: contain;\n}";
+var view = ".view {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-shrink: 0;\n\n    position: relative;\n    width: 100%;\n    height: 100%;\n\n\n    background-color: black;\n    border-radius: 6px;\n\n    cursor: pointer;\n    transition: transform 0.4s;\n}\n\n.view-inner {\n    position: relative;\n    height: 100%;\n    width: 100%;\n    border-radius: 6px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n    opacity: 0.1;\n}";
 
-var canvas = ".canvas {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n}\n\n.feed-element {\n    position: absolute;\n}";
+var canvas = ".canvas {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n}\n\n.feed-element {\n    position: absolute;\n    overflow: hidden;\n}\n\n.content {\n    position: relative;\n    width: 100%;\n    height: 100%;\n    object-fit: fill;\n}";
 
 var Interface = ".interface {\n    position: absolute;\n    width: inherit;\n    height: inherit;\n\n    display: flex;\n    flex-direction: column;\n\n    padding-inline: 4%;\n    padding-block: 8%;\n    box-sizing: border-box;\n}\n\n.interface-top {\n    top: 4%;\n    justify-content: space-between;\n    align-items: center;\n    display: flex;\n    position: relative;\n    flex-direction: row;\n}\n\n.interface-bottom {\n    margin-top: auto;\n    position: relative;\n    bottom: 4%;\n    display: flex;\n    align-self: flex-end;\n    justify-self: center;\n    flex-direction: column;\n    gap: 20%;\n}\n\n.interface-title {\n    position: absolute;\n    color: white;\n    font-weight: 700;\n    font-size: 12px;\n    left: 16%;\n}\n\n@media (max-width: 500px) {\n    .interface-title {\n        font-size: 24px;\n    }\n}";
 
 var timeline = ".timeline {\n    width: 100%;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 2px;\n    box-sizing: border-box;\n    padding-inline: 2px;\n    position: relative;\n}\n\n.progress {\n    border-radius: 1px;\n    height: 2px;\n    background-color: rgba(255, 255, 255, 0.48);\n    overflow: hidden;\n}\n\n.gauge {\n    border-radius: 1px;\n    height: 100%;\n    width: 0;\n    background-color: #FFFFFF;\n}";
 
-var controller = ".controller {\n    position: absolute;\n    width: 144%;\n    height: 0;\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    align-items: center;\n}\n\n@media (max-width: 768px) {\n    .controller {\n        visibility: hidden\n    }\n}";
+var controller = ".controller {\n    position: absolute;\n    width: 144%;\n    height: 0;\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    align-items: center;\n}\n\n@container slider (max-width: 768px) {\n    .controller {\n        visibility: hidden\n    }\n}";
 
 const css = init
     + icon
@@ -62,9 +62,9 @@ const css = init
     + storyContainer
     + story
     + shorts
+    + embed
     + viewContainer
     + view
-    + screen
     + canvas
     + Interface
     + timeline
@@ -95,7 +95,7 @@ function toggleLayerOpen(element) {
     return getDOM(element).querySelector("sw-layer").toggleAttribute("hidden");
 }
 const setVideo = (element) => (state) => {
-    const player = element.closest("sw-view").querySelector("sw-screen").firstElementChild;
+    const player = element.closest("sw-view").querySelector("sw-canvas").firstElementChild;
     player.tagName === "VIDEO" && player[state]();
 };
 
@@ -142,35 +142,22 @@ customElements.define("sw-story", class extends HTMLElement {
     }
 });
 
-customElements.define("sw-screen", class extends HTMLElement {
-    connectedCallback() {
-        this.classList.add("screen");
-    }
-    static get observedAttributes() {
-        return ["current-feed-id"];
-    }
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === "current-feed-id") {
-            const currentFeed = getFeedStore(this).currentFeed;
-            const { type, content } = currentFeed;
-            if (type === "IMAGE")
-                this.innerHTML = `<img alt="content" class="content" src="${content}"/>`;
-            if (type === "VIDEO")
-                this.innerHTML = `<video class="content" src="${content}" autoplay loop muted/>`;
-        }
-    }
-});
-
 customElements.define("sw-feed-element", class extends HTMLElement {
     constructor() {
         super(...arguments);
         this.properties = ["left", "top", "width", "height"];
+        this.rotate = this.getAttribute("rotate");
         this.src = this.getAttribute("src");
+        this.type = this.getAttribute("type");
     }
     connectedCallback() {
         this.classList.add("feed-element");
         this.properties.map(property => this.style[property] = this.getAttribute(property) + "%");
-        this.innerHTML = `<img alt="sticker" width="100%" height="100%" src="${this.src}"/>`;
+        this.style.rotate = this.rotate + "deg";
+        if (this.type === "IMAGE")
+            this.innerHTML = `<img alt="" class="content" src="${this.src}"/>`;
+        if (this.type === "VIDEO")
+            this.innerHTML = `<video class="content" src="${this.src}" autoplay loop muted/>`;
     }
 });
 
@@ -183,58 +170,17 @@ customElements.define("sw-canvas", class extends HTMLElement {
     }
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === "current-feed-id") {
+            const { type, content, position: { width, height, position_x, position_y, rotate } } = getFeedStore(this).currentFeed;
+            this.innerHTML = `<sw-feed-element  type=${type} src=${content} width=${width} height=${height} left=${position_x} top=${position_y} rotate=${rotate}></sw-feed-element>`;
             const feedElements = getFeedStore(this).currentFeed.elements;
-            if (feedElements === undefined)
-                this.innerHTML = null;
-            else
-                this.innerHTML = feedElements.map(element => {
-                    const { width, height, position_x, position_y, sticker } = element;
-                    return `<sw-feed-element 
-                    src=${sticker} width=${width} height=${height} left=${position_x} top=${position_y}>
-                </sw-feed-element>
-                `;
+            if (feedElements !== undefined)
+                this.innerHTML += feedElements.map(element => {
+                    const { width, height, position_x, position_y, rotation_angle, sticker } = element;
+                    return `<sw-feed-element type="IMAGE" src=${sticker} width=${width} height=${height} left=${position_x} top=${position_y} rotate=${rotation_angle}></sw-feed-element>`;
                 }).join("");
         }
     }
 });
-
-class Gesture {
-    constructor(element) {
-        this.states = ["down", "up", "hover", "leave", "move", "touch", "swipe"];
-        this.when = state => callback => this.states[state] = callback;
-        element.onmouseenter = () => this.states["hover"]();
-        element.onmouseleave = () => this.states["leave"]();
-        element.onmousedown = (event) => {
-            this.amount = event.offsetX;
-            this.states["down"]();
-        };
-        element.ontouchstart = (event) => {
-            this.amount = event.touches[0].clientX;
-            this.states["down"]();
-        };
-        element.onmouseup = (event) => {
-            this.states["up"]();
-            this.amount -= event.offsetX;
-            const touchPosition = event.offsetX / event.currentTarget.offsetWidth;
-            Math.abs(this.amount) <= 10
-                ? this.states["touch"](getTouchPosition(touchPosition))
-                : this.states["swipe"](getDirection(this.amount));
-        };
-        element.ontouchend = (event) => {
-            this.amount -= event.changedTouches[0].clientX;
-            const touchPosition = event.changedTouches[0].clientX / event.currentTarget.offsetWidth;
-            Math.abs(this.amount) <= 10
-                ? this.states["touch"](getTouchPosition(touchPosition))
-                : this.states["swipe"](getDirection(this.amount));
-        };
-    }
-}
-function getDirection(movedPoint) {
-    return movedPoint > 0 ? "RIGHT" : "LEFT";
-}
-function getTouchPosition(position) {
-    return (position <= 0.25 && "LEFT") || (position >= 0.75 && "RIGHT") || "CENTER";
-}
 
 const observeFeedElements = ["sw-canvas", "sw-screen", "sw-timeline", "sw-progress", "sw-interface-top"];
 class FeedStore {
@@ -283,12 +229,10 @@ customElements.define("sw-shorts", class extends HTMLElement {
         this.feedIndex = 0;
         this.isHover = false;
         this.showPreview = () => {
-            // setAttribute로 변경 또는 render 변경 범위 인식 해결
-            this.feedStore.playFeed(this.feedStore.feeds[this.feedIndex]);
             this.preview.innerHTML = `
-            <sw-screen class="shorts-preview" current-feed-id></sw-screen>
-            <sw-canvas class="shorts-preview" current-feed-id></sw-canvas>
+            <sw-canvas class="shorts-preview"></sw-canvas>
         `;
+            this.feedStore.setFeed(this.feedStore.feeds[this.feedIndex]);
             this.feedIndex = this.feedIndex !== this.feedStore.feeds.length - 1 ? this.feedIndex + 1 : 0;
         };
     }
@@ -298,64 +242,25 @@ customElements.define("sw-shorts", class extends HTMLElement {
             <img class="shorts-image" src="${this.story.thumbnail}" alt=""/>
             <div class="preview-container"/>
         `;
-        this.thubnail = this.querySelector(".shorts-image");
         this.preview = this.querySelector(".preview-container");
-        const gesture = new Gesture(this);
-        gesture.when("hover")(() => {
+        this.onmouseover = () => {
             if (!this.isHover) {
                 this.isHover = !this.isHover;
-                this.thubnail.style.display = "none";
                 this.showPreview();
                 this.conversion = setInterval(this.showPreview, 2000);
             }
-        });
-        gesture.when("leave")(() => {
+        };
+        this.onmouseleave = () => {
             if (this.isHover) {
                 this.isHover = !this.isHover;
-                this.thubnail.style.display = "flex";
                 this.preview.innerHTML = "";
                 clearInterval(this.conversion);
             }
-        });
+        };
         this.onclick = () => {
             toggleLayerOpen(this);
             getStoryStore(this).setStoryById(this.story.id);
         };
-    }
-});
-
-class ReadStories {
-    constructor(element) {
-        this.addReadStory = (selectedStoryId) => {
-            const readStoriesId = new Set(this.readStoriesId);
-            readStoriesId.add(selectedStoryId);
-            sessionStorage.setItem("readStories", JSON.stringify([...readStoriesId]));
-            this.render(selectedStoryId);
-        };
-        this.checkReadStories = () => this.readStoriesId.map(readStoryId => this.render(readStoryId));
-        this.element = element;
-        this.readStoriesId = JSON.parse(sessionStorage.getItem("readStories")) || new Array;
-    }
-    render(selectedStoryId) {
-        const currentStory = Array.from(this.element.querySelectorAll("sw-story")).find((storyElement) => storyElement.story.id === selectedStoryId);
-        if (currentStory !== null)
-            currentStory.firstElementChild.style.backgroundImage = "none";
-    }
-}
-
-customElements.define("sw-story-container", class extends HTMLElement {
-    constructor() {
-        super(...arguments);
-        this.readStories = new ReadStories(this);
-    }
-    connectedCallback() {
-        this.classList.add("story-container");
-        const type = getProperties(this)("type") || "group";
-        const shape = getProperties(this)("shape") || "story";
-        const stories = getStoryStore(this).stories;
-        const shownStories = type === "group" ? stories : [stories[0]];
-        this.innerHTML = shownStories.map(shownStory => `<sw-${shape} story-id=${shownStory.id}></sw-${shape}>`).join("");
-        this.readStories.checkReadStories();
     }
 });
 
@@ -389,7 +294,7 @@ class Progresser {
         this.current = () => this.element.currentTime / this.element.duration;
     }
 }
-var Progress = new Progresser();
+var progress = new Progresser();
 
 customElements.define("sw-progress", class extends HTMLElement {
     constructor() {
@@ -417,8 +322,10 @@ customElements.define("sw-progress", class extends HTMLElement {
         return ["current-feed-id"];
     }
     attributeChangedCallback(name, oldValue, newValue) {
+        if (name === "current-feed-id" && this.feedId === oldValue)
+            this.resetCurrentTime();
         if (name === "current-feed-id" && this.feedId === newValue)
-            Progress.start(this);
+            progress.start(this);
     }
 });
 
@@ -535,13 +442,38 @@ customElements.define("sw-interface", class extends HTMLElement {
             <sw-interface-top></sw-interface-top>
             <sw-interface-bottom></sw-interface-bottom>
         `;
-        const gesture = new Gesture(this);
-        gesture.when("up")(Progress.play);
-        gesture.when("down")(Progress.pause);
-        gesture.when("swipe")((direction) => direction === "RIGHT" ? getStoryStore(this).goNext() : getStoryStore(this).goPrev());
-        gesture.when("touch")((direction) => direction === "RIGHT" ? getFeedStore(this).goNext() : getFeedStore(this).goPrev());
+        this.onmousedown = (event) => {
+            progress.pause();
+            this.amount = event.offsetX;
+        };
+        this.ontouchstart = (event) => {
+            progress.pause();
+            this.amount = event.touches[0].clientX;
+        };
+        this.onmouseup = (event) => {
+            progress.play();
+            this.amount -= event.offsetX;
+            const touchPosition = event.offsetX / event.currentTarget.offsetWidth;
+            Math.abs(this.amount) <= 10
+                ? getTouchPosition(touchPosition) === "RIGHT" ? getFeedStore(this).goNext() : getFeedStore(this).goPrev()
+                : getDirection(this.amount) === "RIGHT" ? getStoryStore(this).goNext() : getStoryStore(this).goPrev();
+        };
+        this.ontouchend = (event) => {
+            progress.play();
+            this.amount -= event.changedTouches[0].clientX;
+            const touchPosition = event.changedTouches[0].clientX / event.currentTarget.offsetWidth;
+            Math.abs(this.amount) <= 10
+                ? getTouchPosition(touchPosition) === "RIGHT" ? getFeedStore(this).goNext() : getFeedStore(this).goPrev()
+                : getDirection(this.amount) === "RIGHT" ? getStoryStore(this).goNext() : getStoryStore(this).goPrev();
+        };
     }
 });
+function getDirection(movedPoint) {
+    return movedPoint > 0 ? "RIGHT" : "LEFT";
+}
+function getTouchPosition(position) {
+    return (position <= 0.25 && "LEFT") || (position >= 0.75 && "RIGHT") || "CENTER";
+}
 
 // 첫번째와 마지막 뷰 버튼 숨김 처리 필요
 customElements.define("sw-controller", class extends HTMLElement {
@@ -564,7 +496,6 @@ customElements.define("sw-view", class extends HTMLElement {
         this.classList.add("view");
         this.innerHTML = `           
             <div class="view-inner">
-                <sw-screen></sw-screen>
                 <sw-canvas></sw-canvas>
                 <sw-interface></sw-interface>
             </div>
@@ -608,12 +539,11 @@ var ResizeDetector$1 = new ResizeDetector();
 customElements.define("sw-slider", class extends HTMLElement {
     connectedCallback() {
         this.classList.add("slider");
-        this.innerHTML = `<div class="axis"><sw-view-container></sw-view-container></div>`;
+        this.innerHTML = `<sw-view-container></sw-view-container>`;
         ResizeDetector$1.whenResize(() => this.slide("resize"));
     }
     slide(when) {
-        if (this.closest("sw-layer").getAttribute("hidden") === "")
-            return;
+        // if(this.closest("sw-layer").getAttribute("hidden") === "") return
         const currentIndex = getStoryStore(this).getIndex();
         const viewContainer = this.querySelector("sw-view-container");
         const views = this.querySelectorAll("sw-view");
@@ -622,17 +552,11 @@ customElements.define("sw-slider", class extends HTMLElement {
             viewContainer.style.transitionDuration = "0.4s";
         if (when === "resize")
             viewContainer.style.transitionDuration = "0s";
-        const currentView = this.querySelectorAll("sw-view").item(currentIndex);
-        const center = currentView.offsetWidth / 2;
-        currentView.offsetHeight / 2;
-        let moveMount = -center;
         if (views.length !== 1) {
             const gap = views[1].offsetLeft - views[0].offsetLeft;
-            views[1].offsetTop - views[0].offsetTop;
-            moveMount = -(gap * currentIndex + center);
+            viewContainer.style.left = -(gap * currentIndex) + "px";
         }
-        viewContainer.style.left = moveMount + "px";
-        if (window.innerWidth > MOBILE_SIZE) {
+        if (this.offsetWidth > MOBILE_SIZE) {
             views.forEach((view) => {
                 const indexGap = Math.abs(currentIndex - getStoryStore(this).getIndexById(view.story.id)) + 1;
                 const scaleRate = 1.4 - (indexGap / 8);
@@ -641,6 +565,71 @@ customElements.define("sw-slider", class extends HTMLElement {
         }
         else
             views.forEach((view) => view.style.transform = "scale(1)");
+    }
+});
+
+customElements.define("sw-embed", class extends HTMLElement {
+    constructor() {
+        super(...arguments);
+        this.story = getStoryStore(this).getStoryById(this.getAttribute("story-id"));
+    }
+    connectedCallback() {
+        this.classList.add("embed");
+        this.innerHTML = `
+            <img alt="thumbnail" src="${this.story.thumbnail}" class="embed-thumbnail"/>
+            <sw-slider></sw-slider>
+        `;
+        this.querySelector("img[alt='thumbnail']");
+        let isHover = false;
+        this.onclick = () => {
+            if (!isHover) {
+                isHover = !isHover;
+                getStoryStore(this).setStoryById(this.story.id);
+            }
+        };
+        this.onmouseleave = () => {
+            if (isHover) {
+                isHover = !isHover;
+            }
+        };
+    }
+});
+
+class ReadStories {
+    constructor(element) {
+        this.addReadStory = (selectedStoryId) => {
+            const readStoriesId = new Set(this.readStoriesId);
+            readStoriesId.add(selectedStoryId);
+            sessionStorage.setItem("readStories", JSON.stringify([...readStoriesId]));
+            this.render(selectedStoryId);
+        };
+        this.checkReadStories = () => this.readStoriesId.map(readStoryId => this.render(readStoryId));
+        this.element = element;
+        this.readStoriesId = JSON.parse(sessionStorage.getItem("readStories")) || new Array;
+    }
+    render(selectedStoryId) {
+        const currentStory = Array.from(this.element.querySelectorAll("sw-story")).find((storyElement) => storyElement.story.id === selectedStoryId);
+        if (currentStory?.firstElementChild !== undefined)
+            currentStory.firstElementChild.style.backgroundImage = "none";
+    }
+}
+
+customElements.define("sw-story-container", class extends HTMLElement {
+    constructor() {
+        super(...arguments);
+        this.readStories = new ReadStories(this);
+    }
+    connectedCallback() {
+        this.classList.add("story-container");
+        const type = getProperties(this)("type") || "group";
+        const shape = getProperties(this)("shape") || "story";
+        const stories = getStoryStore(this).stories;
+        const shownStories = type === "group" ? stories : [stories[0]];
+        if (shape === "story" || shape === "shorts")
+            this.innerHTML = shownStories.map(shownStory => `<sw-${shape} story-id=${shownStory.id}></sw-${shape}>`).join("");
+        if (shape === "embed")
+            this.innerHTML = `<sw-embed story-id=${stories[0].id}></sw-embed>`;
+        this.readStories.checkReadStories();
     }
 });
 
@@ -653,6 +642,17 @@ customElements.define("sw-layer", class extends HTMLElement {
         `;
     }
 });
+
+function setIcon(element) {
+    const getAttribute = getProperties(element);
+    const size = getAttribute("size") || "200";
+    if (size === "full") {
+        element.style.height = "100vh";
+        element.style.width = "100%";
+    }
+    else
+        element.style.width = size + "px";
+}
 
 customElements.define("shorts-works", class extends HTMLElement {
     constructor() {
@@ -672,7 +672,13 @@ customElements.define("shorts-works", class extends HTMLElement {
         styleSheet.textContent = css;
         this.DOM.appendChild(styleSheet);
         this.mount = true;
+        // 세팅 관련 정리 필요
+        setStoryContainer(this.DOM.querySelector("sw-story-container"));
+        this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
+        this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
+        this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
     }
+    // 해당 기능들은 디자인을 위한 것으므로 추후 일시적으로 가져오는 방향으로 시도
     static get observedAttributes() {
         return ["radius", "size", "gap", "topColor", "endColor"];
     }
@@ -680,6 +686,8 @@ customElements.define("shorts-works", class extends HTMLElement {
         if (this.mount) {
             setStoryContainer(this.DOM.querySelector("sw-story-container"));
             this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
+            this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
+            this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
         }
     }
 });
@@ -749,11 +757,3 @@ window.addEventListener("click", (event) => {
         sendMessage({ title: "mode", data: "edit" });
     }
 });
-
-if (document.referrer.includes("localhost")) {
-    // const prevPreview = document.getElementById("shorts-works-preview")
-    // prevPreview !== undefined && prevPreview.remove()
-    const preview = document.createElement("script");
-    preview.id = "shorts-works-preview";
-    document.body.appendChild(preview);
-}
