@@ -50,6 +50,7 @@ window.addEventListener("mouseover", mouseEvent => {
         if (validateTarget(element)) {
             settings.currentElement !== undefined && document.querySelector("shorts-works").remove();
             const shortsworks = document.createElement("shorts-works");
+            shortsworks.setAttribute("src", JSON.stringify(posts));
             shortsworks.style.opacity = "0.5";
             element.insertAdjacentElement("afterend", shortsworks);
             settings.currentElement = element;
@@ -73,6 +74,7 @@ async function getStories() {
         return response.json();
 }
 
+let posts;
 if (document.referrer.includes("localhost")) {
     // const prevPreview = document.getElementById("shorts-works-preview")
     // prevPreview !== undefined && prevPreview.remove()
@@ -86,18 +88,18 @@ const getSettings = async () => {
         return response.json();
 };
 async function attachWidget() {
-    const posts = await getStories();
+    posts = await getStories();
     const settings = await getSettings();
     //     if(settings.settings.auto === true) {
     //         if(window.location.href === "") {
     //
     //         }
     //     }
-    console.log(settings.order);
     if (settings.order === "random")
         posts.sort(() => Math.random() - 0.5);
-    const shortsworks = document.querySelector("shorts-works");
-    shortsworks.setAttribute("src", JSON.stringify(posts));
+    // 위젯이 없는 경우 또는 여러개인 경우
+    document.querySelector("shorts-works");
+    // shortsworks.setAttribute("src", JSON.stringify(posts))
 }
 attachWidget();
 
