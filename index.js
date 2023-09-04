@@ -1,8 +1,8 @@
 class Settings {
     constructor() {
         this.setMode = newMode => this.mode = newMode;
-        this.removePreviewWidget = () => document.querySelector("shorts-works") !== null
-            && document.querySelector("shorts-works").remove();
+        this.removePreviewWidget = () => document.querySelector("shorts-works[id='preview']") !== null
+            && document.querySelector("shorts-works[id='preview']").remove();
         this.mode = "none";
         this.currentElement = undefined;
     }
@@ -31,27 +31,33 @@ window.onmessage = message => {
         }
     }
     if (title === "attributes") {
-        Object.entries(data).forEach(([key, value]) => document.querySelector("shorts-works").setAttribute(key.toString(), value.toString()));
+        const shortsworks = document.querySelector("shorts-works[id='preview']") || document.querySelector("shorts-works");
+        // const shortsworks = document.querySelector("shorts-works[id='preview']") !== null ?  document.querySelector("shorts-works[id='preview']") :  document.querySelector("shorts-works")
+        Object.entries(data).forEach(([key, value]) => shortsworks.setAttribute(key.toString(), value.toString()));
     }
     if (title === "shape") {
-        document.querySelector("shorts-works").outerHTML = `<shorts-works shape=${data}></shorts-works>`;
+        const shortsworks = document.querySelector("shorts-works");
+        shortsworks.setAttribute("shape", data);
     }
 };
 
+// preview와 real shorts-works 분리 필요
 function validateTarget(element) {
     return element.tagName !== "BODY"
         && element.tagName !== "HTML"
-        && element.closest("shorts-works") === null
+        // && element.closest("shorts-works")?.id !== "preview"
         && element !== settings.currentElement;
 }
 window.addEventListener("mouseover", mouseEvent => {
     if (settings.mode === "preview") {
         const element = mouseEvent.target;
         if (validateTarget(element)) {
-            settings.currentElement !== undefined && document.querySelector("shorts-works").remove();
+            settings.currentElement !== undefined && document.querySelector("shorts-works[id='preview']").remove();
             const shortsworks = document.createElement("shorts-works");
+            shortsworks.id = "preview";
             shortsworks.setAttribute("src", JSON.stringify(posts));
             shortsworks.style.opacity = "0.5";
+            shortsworks.style.display = element.tagName === "SHORTS-WORKS" ? "none" : "flex";
             element.insertAdjacentElement("afterend", shortsworks);
             settings.currentElement = element;
         }
@@ -59,8 +65,10 @@ window.addEventListener("mouseover", mouseEvent => {
 });
 window.addEventListener("click", (event) => {
     if (settings.mode === "preview") {
-        const shortsworks = document.querySelector("shorts-works");
+        const shortsworks = document.querySelector("shorts-works[id='preview']");
         shortsworks.style.opacity = "1";
+        if (settings.currentElement.tagName === "SHORTS-WORKS")
+            shortsworks.remove();
         settings.setMode("edit");
         sendMessage({ title: "mode", data: "edit" });
     }
@@ -87,9 +95,15 @@ const getSettings = async () => {
     if (response.ok)
         return response.json();
 };
+const getDesign = async () => {
+    const response = await fetch("http://localhost:3001/design");
+    if (response.ok)
+        return response.json();
+};
 async function attachWidget() {
     posts = await getStories();
     const settings = await getSettings();
+    const design = await getDesign();
     //     if(settings.settings.auto === true) {
     //         if(window.location.href === "") {
     //
@@ -97,9 +111,11 @@ async function attachWidget() {
     //     }
     if (settings.order === "random")
         posts.sort(() => Math.random() - 0.5);
+    // if(settings.auto === "top") document.body.insertAdjacentHTML("afterbegin", `<shorts-works></shorts-works>`)
     // 위젯이 없는 경우 또는 여러개인 경우
-    document.querySelector("shorts-works");
-    // shortsworks.setAttribute("src", JSON.stringify(posts))
+    const shortsworks = document.querySelector("shorts-works");
+    shortsworks.outerHTML = design.tag
+        .replace("<shorts-works", `<shorts-works src=${JSON.stringify(posts)} `);
 }
 attachWidget();
 
@@ -241,8 +257,6 @@ customElements.define("sw-story", class extends HTMLElement {
     }
 });
 
-let isMute = false;
-
 customElements.define("sw-feed-element", class extends HTMLElement {
     constructor() {
         super(...arguments);
@@ -258,7 +272,7 @@ customElements.define("sw-feed-element", class extends HTMLElement {
         if (this.type === "IMAGE")
             this.innerHTML = `<img alt="" class="content" src="${this.src}"/>`;
         if (this.type === "VIDEO")
-            this.innerHTML = `<video class="content" src="${this.src}" autoplay loop ${isMute}/>`;
+            this.innerHTML = `<video class="content" src="${this.src}" autoplay loop muted/>`;
     }
 });
 
@@ -767,7 +781,7 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
     // 해당 기능들은 디자인을 위한 것으므로 추후 일시적으로 가져오는 방향으로 시도
     static get observedAttributes() {
-        return ["radius", "size", "gap", "topColor", "endColor", "src"];
+        return ["radius", "size", "gap", "topColor", "endColor", "src", "shape"];
     }
     async attributeChangedCallback() {
         this.stories = JSON.parse(this.getAttribute("src"));
