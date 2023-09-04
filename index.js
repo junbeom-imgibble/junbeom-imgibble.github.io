@@ -1,3 +1,70 @@
+class Settings {
+    constructor() {
+        this.setMode = newMode => this.mode = newMode;
+        this.removePreviewWidget = () => document.querySelector("shorts-works") !== null
+            && document.querySelector("shorts-works").remove();
+        this.mode = "none";
+        this.currentElement = undefined;
+    }
+}
+var settings = new Settings();
+
+// const ORIGIN_URL
+function sendMessage(message) {
+    window.parent.postMessage(message, "*");
+}
+const previewMode = document.createElement("style");
+previewMode.id = "shorts-works-preview-mode";
+previewMode.innerHTML = "body:active { pointer-events: none; } * { cursor: pointer }";
+window.onmessage = message => {
+    const title = message.data.title;
+    const data = message.data.data;
+    if (title === "mode") {
+        settings.mode = data;
+        if (data === "preview") {
+            document.body.appendChild(previewMode);
+        }
+        if (data === "none") {
+            settings.removePreviewWidget();
+            settings.currentElement = undefined;
+            document.getElementById("shorts-works-preview-mode").remove();
+        }
+    }
+    if (title === "attributes") {
+        Object.entries(data).forEach(([key, value]) => document.querySelector("shorts-works").setAttribute(key.toString(), value.toString()));
+    }
+    if (title === "shape") {
+        document.querySelector("shorts-works").outerHTML = `<shorts-works shape=${data}></shorts-works>`;
+    }
+};
+
+function validateTarget(element) {
+    return element.tagName !== "BODY"
+        && element.tagName !== "HTML"
+        && element.closest("shorts-works") === null
+        && element !== settings.currentElement;
+}
+window.addEventListener("mouseover", mouseEvent => {
+    if (settings.mode === "preview") {
+        const element = mouseEvent.target;
+        if (validateTarget(element)) {
+            settings.currentElement !== undefined && document.querySelector("shorts-works").remove();
+            const shortsworks = document.createElement("shorts-works");
+            shortsworks.style.opacity = "0.5";
+            element.insertAdjacentElement("afterend", shortsworks);
+            settings.currentElement = element;
+        }
+    }
+});
+window.addEventListener("click", (event) => {
+    if (settings.mode === "preview") {
+        const shortsworks = document.querySelector("shorts-works");
+        shortsworks.style.opacity = "1";
+        settings.setMode("edit");
+        sendMessage({ title: "mode", data: "edit" });
+    }
+});
+
 const backendURL = "http://localhost:3001";
 
 async function getStories() {
@@ -5,6 +72,34 @@ async function getStories() {
     if (response.ok)
         return response.json();
 }
+
+if (document.referrer.includes("localhost")) {
+    // const prevPreview = document.getElementById("shorts-works-preview")
+    // prevPreview !== undefined && prevPreview.remove()
+    const preview = document.createElement("script");
+    preview.id = "shorts-works-preview";
+    document.body.appendChild(preview);
+}
+const getSettings = async () => {
+    const response = await fetch("http://localhost:3001/settings");
+    if (response.ok)
+        return response.json();
+};
+async function attachWidget() {
+    const posts = await getStories();
+    const settings = await getSettings();
+    //     if(settings.settings.auto === true) {
+    //         if(window.location.href === "") {
+    //
+    //         }
+    //     }
+    console.log(settings.order);
+    if (settings.order === "random")
+        posts.sort(() => Math.random() - 0.5);
+    const shortsworks = document.querySelector("shorts-works");
+    shortsworks.setAttribute("src", JSON.stringify(posts));
+}
+attachWidget();
 
 class StoryStore {
     constructor(element) {
@@ -120,6 +215,8 @@ function setStoryIcon(element) {
 
 function setStoryContainer(element) {
     element.style.gap = (getProperties(element)("gap") || "20") + "px";
+    // element.style.alignItems
+    // element.style.padding
 }
 
 customElements.define("sw-story", class extends HTMLElement {
@@ -142,6 +239,8 @@ customElements.define("sw-story", class extends HTMLElement {
     }
 });
 
+let isMute = false;
+
 customElements.define("sw-feed-element", class extends HTMLElement {
     constructor() {
         super(...arguments);
@@ -157,7 +256,7 @@ customElements.define("sw-feed-element", class extends HTMLElement {
         if (this.type === "IMAGE")
             this.innerHTML = `<img alt="" class="content" src="${this.src}"/>`;
         if (this.type === "VIDEO")
-            this.innerHTML = `<video class="content" src="${this.src}" autoplay loop muted/>`;
+            this.innerHTML = `<video class="content" src="${this.src}" autoplay loop ${isMute}/>`;
     }
 });
 
@@ -662,98 +761,29 @@ customElements.define("shorts-works", class extends HTMLElement {
         this.mount = false;
     }
     async connectedCallback() {
-        this.stories = await getStories();
-        this.storyStore = new StoryStore(this);
-        this.DOM.innerHTML = `
-            <sw-story-container></sw-story-container>
-            <sw-layer hidden></sw-layer>
-        `;
-        const styleSheet = document.createElement("style");
-        styleSheet.textContent = css;
-        this.DOM.appendChild(styleSheet);
-        this.mount = true;
-        // 세팅 관련 정리 필요
-        setStoryContainer(this.DOM.querySelector("sw-story-container"));
-        this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
-        this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
-        this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
+        // this.stories = await getStories()
     }
     // 해당 기능들은 디자인을 위한 것으므로 추후 일시적으로 가져오는 방향으로 시도
     static get observedAttributes() {
-        return ["radius", "size", "gap", "topColor", "endColor"];
+        return ["radius", "size", "gap", "topColor", "endColor", "src"];
     }
     async attributeChangedCallback() {
-        if (this.mount) {
+        this.stories = JSON.parse(this.getAttribute("src"));
+        if (this.stories !== null) {
+            this.storyStore = new StoryStore(this);
+            this.DOM.innerHTML = `
+                <sw-story-container></sw-story-container>
+                <sw-layer hidden></sw-layer>
+            `;
+            const styleSheet = document.createElement("style");
+            styleSheet.textContent = css;
+            this.DOM.appendChild(styleSheet);
+            // this.mount = true
+            // 세팅 관련 정리 필요
             setStoryContainer(this.DOM.querySelector("sw-story-container"));
             this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
             this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
             this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
         }
-    }
-});
-
-class Settings {
-    constructor() {
-        this.setMode = newMode => this.mode = newMode;
-        this.removePreviewWidget = () => document.querySelector("shorts-works") !== null
-            && document.querySelector("shorts-works").remove();
-        this.mode = "none";
-        this.currentElement = undefined;
-    }
-}
-var settings = new Settings();
-
-// const ORIGIN_URL
-function sendMessage(message) {
-    window.parent.postMessage(message, "*");
-}
-window.onmessage = message => {
-    const title = message.data.title;
-    const data = message.data.data;
-    if (title === "mode") {
-        settings.mode = data;
-        if (data === "preview") {
-            const previewMode = document.createElement("style");
-            previewMode.id = "preview-mode";
-            previewMode.innerHTML = "body:active { pointer-events: none; } * { cursor: pointer }";
-            document.body.appendChild(previewMode);
-        }
-        if (data === "none") {
-            settings.removePreviewWidget();
-            settings.currentElement = undefined;
-        }
-    }
-    if (title === "attributes") {
-        Object.entries(data).forEach(([key, value]) => document.querySelector("shorts-works").setAttribute(key.toString(), value.toString()));
-    }
-    if (title === "shape") {
-        document.querySelector("shorts-works").outerHTML = `<shorts-works shape=${data}></shorts-works>`;
-    }
-};
-
-function validateTarget(element) {
-    return element.tagName !== "BODY"
-        && element.tagName !== "HTML"
-        && element.closest("shorts-works") === null
-        && element !== settings.currentElement;
-}
-window.addEventListener("mouseover", mouseEvent => {
-    if (settings.mode === "preview") {
-        const element = mouseEvent.target;
-        if (validateTarget(element)) {
-            settings.currentElement !== undefined && document.querySelector("shorts-works").remove();
-            const shortsworks = document.createElement("shorts-works");
-            shortsworks.style.opacity = "0.5";
-            element.insertAdjacentElement("afterend", shortsworks);
-            settings.currentElement = element;
-        }
-    }
-});
-window.addEventListener("click", (event) => {
-    if (settings.mode === "preview") {
-        const shortsworks = document.querySelector("shorts-works");
-        shortsworks.style.opacity = "1";
-        settings.setMode("edit");
-        sendMessage({ title: "mode", data: "edit" });
     }
 });
