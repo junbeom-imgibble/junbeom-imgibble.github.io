@@ -42,11 +42,10 @@ window.onmessage = message => {
     }
 };
 
-customElements.define("sw-preview-controller", class extends HTMLElement {
-    connectedCallback() {
-    }
-});
-
+const previewMode = document.createElement("style");
+previewMode.id = "preview-mode";
+previewMode.textContent = `body:active { pointer-events: none }`;
+document.body.cloneNode(true);
 // preview와 real shorts-works 분리 필요
 function validateTarget(element) {
     return element.tagName !== "HTML"
@@ -78,7 +77,7 @@ window.addEventListener("click", (event) => {
         const { left, top, right, bottom } = shortsworks.getBoundingClientRect();
         sendMessage({ title: "attach", data: { left: left, top: bottom, attach: true } });
     }
-});
+}, false);
 let dragPositionX;
 let dragPositionY;
 window.addEventListener("mousedown", (event) => {
@@ -140,6 +139,11 @@ window.addEventListener("mousemove", (event) => {
         }
     }
 });
+window.onscroll = () => {
+    const shortsworks = document.querySelector("shorts-works[id='preview']");
+    const { left, bottom } = shortsworks.getBoundingClientRect();
+    sendMessage({ title: "attach", data: { left, top: bottom, attach: true } });
+};
 
 const backendURL = "http://localhost:3001";
 
