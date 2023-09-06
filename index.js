@@ -299,8 +299,7 @@ function setStoryIcon(element) {
 
 function setStoryContainer(element) {
     element.style.gap = (getProperties(element)("gap") || "20") + "px";
-    // element.style.alignItems
-    // element.style.padding
+    element.style.padding = (getProperties(element)("padding") || "20") + "px";
 }
 
 customElements.define("sw-story", class extends HTMLElement {
@@ -854,7 +853,7 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
     // 해당 기능들은 디자인을 위한 것으므로 추후 일시적으로 가져오는 방향으로 시도
     static get observedAttributes() {
-        return ["radius", "size", "gap", "topColor", "endColor"];
+        return ["radius", "size", "gap", "padding", "topColor", "endColor"];
     }
     attributeChangedCallback() {
         setStoryContainer(this.DOM.querySelector("sw-story-container"));
