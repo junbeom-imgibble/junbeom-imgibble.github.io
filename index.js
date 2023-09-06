@@ -33,6 +33,7 @@ window.onmessage = message => {
     if (title === "attributes") {
         const shortsworks = document.querySelector("shorts-works[id='preview']") || document.querySelector("shorts-works");
         // const shortsworks = document.querySelector("shorts-works[id='preview']") !== null ?  document.querySelector("shorts-works[id='preview']") :  document.querySelector("shorts-works")
+        Object.entries(data).forEach(([key, value]) => settings.settings[key.toString()] = value.toString());
         Object.entries(data).forEach(([key, value]) => shortsworks.setAttribute(key.toString(), value.toString()));
     }
     if (title === "shape") {
@@ -224,11 +225,11 @@ var icon = ".icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 1;\n
 
 var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n}\n\n.slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}";
 
-var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n    gap: 20px;\n    width: fit-content;\n    max-width: 100vw;\n    overflow: scroll;\n    /*padding: 1rem;*/\n}";
+var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n    gap: 20px;\n    width: fit-content;\n    max-width: 100vw;\n    overflow: scroll;\n    padding: 24px;\n}";
 
 var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    display: flex;\n    justify-content: center;\n    width: 100px;\n\n    padding: 0.25rem;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n    border-radius: 50%;\n\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}";
 
-var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n}\n\n.shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
+var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n}\n\n.shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
 
 var embed = ".embed {\n    position: relative;\n    width: 400px;\n    aspect-ratio: 9/16;\n}\n\n.embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n    border-radius: 4px;\n}";
 
