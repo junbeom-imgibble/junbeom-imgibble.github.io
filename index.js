@@ -1,9 +1,12 @@
 class Settings {
     constructor() {
+        this.isDragging = false;
+        this.currentType = "story";
         this.setMode = newMode => this.mode = newMode;
         this.removePreviewWidget = () => document.querySelector("shorts-works[id='preview']") !== null
             && document.querySelector("shorts-works[id='preview']").remove();
-        this.mode = "none";
+        this.getPreview = () => document.querySelector("shorts-works[id='preview']");
+        this.mode = "preview";
         this.currentElement = undefined;
     }
 }
@@ -13,17 +16,14 @@ var settings = new Settings();
 function sendMessage(message) {
     window.parent.postMessage(message, "*");
 }
-const previewMode = document.createElement("style");
-previewMode.id = "shorts-works-preview-mode";
-previewMode.innerHTML = "body:active { pointer-events: none; } * { cursor: pointer }";
+// const previewMode = document.createElement("style")
+// previewMode.id = "shorts-works-preview-mode"
+// previewMode.innerHTML = "body:active { pointer-events: none; } * { cursor: pointer }"
 window.onmessage = message => {
     const title = message.data.title;
     const data = message.data.data;
     if (title === "mode") {
         settings.mode = data;
-        if (data === "preview") {
-            document.body.appendChild(previewMode);
-        }
         if (data === "none") {
             settings.removePreviewWidget();
             settings.currentElement = undefined;
@@ -36,29 +36,32 @@ window.onmessage = message => {
         Object.entries(data).forEach(([key, value]) => shortsworks.setAttribute(key.toString(), value.toString()));
     }
     if (title === "shape") {
+        settings.currentType = data;
         const shortsworks = document.querySelector("shorts-works");
-        shortsworks.setAttribute("shape", data);
+        shortsworks.outerHTML = `<shorts-works id="preview" shape=${data} src=${JSON.stringify(posts)}></shorts-works>`;
     }
 };
 
+customElements.define("sw-preview-controller", class extends HTMLElement {
+    connectedCallback() {
+    }
+});
+
 // preview와 real shorts-works 분리 필요
 function validateTarget(element) {
-    return element.tagName !== "BODY"
-        && element.tagName !== "HTML"
-        // && element.closest("shorts-works")?.id !== "preview"
-        && element !== settings.currentElement;
+    return element.tagName !== "HTML"
+        && element.tagName !== "BODY"
+        && element.closest("shorts-works")?.id !== "preview"
+        && element !== settings.currentElement
+        && element.id !== "preview-space";
 }
 window.addEventListener("mouseover", mouseEvent => {
     if (settings.mode === "preview") {
         const element = mouseEvent.target;
         if (validateTarget(element)) {
             settings.currentElement !== undefined && document.querySelector("shorts-works[id='preview']").remove();
-            const shortsworks = document.createElement("shorts-works");
-            shortsworks.id = "preview";
-            shortsworks.setAttribute("src", JSON.stringify(posts));
-            shortsworks.style.opacity = "0.5";
-            shortsworks.style.display = element.tagName === "SHORTS-WORKS" ? "none" : "flex";
-            element.insertAdjacentElement("afterend", shortsworks);
+            const shortsworks = `<shorts-works id="preview" src=${JSON.stringify(posts)} style="opacity: 0.5"></shorts-works>`;
+            element.insertAdjacentHTML("afterend", shortsworks);
             settings.currentElement = element;
         }
     }
@@ -67,10 +70,69 @@ window.addEventListener("click", (event) => {
     if (settings.mode === "preview") {
         const shortsworks = document.querySelector("shorts-works[id='preview']");
         shortsworks.style.opacity = "1";
+        shortsworks.style.cursor = "pointer";
         if (settings.currentElement.tagName === "SHORTS-WORKS")
             shortsworks.remove();
         settings.setMode("edit");
-        sendMessage({ title: "mode", data: "edit" });
+    }
+});
+let dragPositionX;
+let dragPositionY;
+window.addEventListener("mousedown", (event) => {
+    if (settings.mode === "edit" && event.target.tagName === "SHORTS-WORKS") {
+        settings.isDragging = true;
+        dragPositionX = event.clientX - event.target.getBoundingClientRect().left;
+        dragPositionY = event.clientY - event.target.getBoundingClientRect().top;
+        moveDirectionY = event.clientY;
+        moveDirectionX = event.clientX;
+    }
+});
+let pointedElement = null;
+let attach = false;
+window.addEventListener("mouseup", () => {
+    if (settings.mode === "edit" && settings.isDragging) {
+        settings.isDragging = false;
+        document.querySelector("shorts-works[id='preview']").remove();
+        document.querySelector("#preview-space").remove();
+        pointedElement.insertAdjacentHTML("afterend", `<shorts-works shape=${settings.currentType} style="position: absolute" id="preview" src=${JSON.stringify(posts)}></shorts-works>`);
+        if (!attach) {
+            attach = !attach;
+            const { left, top, width, height, bottom, right } = document.querySelector("shorts-works[id='preview']").getBoundingClientRect();
+            sendMessage({ title: "attach", data: { left: right, top: bottom, attach } });
+            document.querySelector("shorts-works").style.position = "relative";
+        }
+    }
+});
+let moveDirectionX = null;
+let moveDirectionY = null;
+window.addEventListener("mousemove", (event) => {
+    if (settings.isDragging) {
+        let currentDirectionX = moveDirectionX - event.clientX;
+        moveDirectionY - event.clientY;
+        moveDirectionY = event.clientY;
+        moveDirectionX = event.clientX;
+        // const closedElement = document.elementsFromPoint(event.clientX, event.clientY).filter(element => validateTarget(element))
+        const shortsworks = document.querySelector("shorts-works[id='preview']");
+        shortsworks.style.position = "absolute";
+        shortsworks.style.left = (event.pageX - dragPositionX) + "px";
+        shortsworks.style.top = (event.pageY - dragPositionY) + "px";
+        if (currentDirectionX === 0)
+            return;
+        const { left, top, right, bottom, width, height } = shortsworks.getBoundingClientRect();
+        let currentPointed = document.elementsFromPoint(left, top + height / 2).filter(element => validateTarget(element))[0];
+        if (currentPointed !== undefined && currentPointed !== pointedElement && currentPointed !== null) {
+            const prevSpace = document.querySelector("#preview-space");
+            prevSpace !== null && prevSpace.remove();
+            pointedElement = currentPointed;
+            const { width, height } = shortsworks.getBoundingClientRect();
+            const space = `<div id="preview-space" style="border: 1px dashed lightgray; width: ${width}; height: ${height}"/>`;
+            pointedElement.insertAdjacentHTML("afterend", space);
+        }
+        if (attach) {
+            attach = !attach;
+            const { left, top } = document.querySelector("shorts-works[id='preview']").getBoundingClientRect();
+            sendMessage({ title: "attach", data: { left, top, attach } });
+        }
     }
 });
 
@@ -103,7 +165,7 @@ const getDesign = async () => {
 async function attachWidget() {
     posts = await getStories();
     const settings = await getSettings();
-    const design = await getDesign();
+    await getDesign();
     //     if(settings.settings.auto === true) {
     //         if(window.location.href === "") {
     //
@@ -113,9 +175,13 @@ async function attachWidget() {
         posts.sort(() => Math.random() - 0.5);
     // if(settings.auto === "top") document.body.insertAdjacentHTML("afterbegin", `<shorts-works></shorts-works>`)
     // 위젯이 없는 경우 또는 여러개인 경우
-    const shortsworks = document.querySelector("shorts-works");
-    shortsworks.outerHTML = design.tag
-        .replace("<shorts-works", `<shorts-works src=${JSON.stringify(posts)} `);
+    // const shortsworks = document.querySelector("shorts-works")
+    // shortsworks.setAttribute("src", JSON.stringify(posts))
+    // shortsworks.setAttribute("shape", "shorts")
+    document.querySelectorAll("shorts-works").forEach(widget => widget.setAttribute("src", JSON.stringify(posts)));
+    // shortsworks.outerHTML = design.tag
+    //     .replace("<shorts-works", `<shorts-works src=${JSON.stringify(posts)} `)
+    // shortsworks.setAttribute("shape", "shorts")
 }
 attachWidget();
 
@@ -147,17 +213,17 @@ var init = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scroll
 
 var icon = ".icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 1;\n    color: rgba(255, 255, 255, 0.48);\n    position: relative;\n    height: 16px;\n    width: 16px;\n\n}\n\n@media (max-width: 768px) {\n    .icon {\n        height: 32px;\n        width: 32px;\n    }\n}\n\n.icon:hover {\n    color: white\n}\n\n.icon-container {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    justify-content: end;\n    gap: 4px;\n}\n\n.outer-close {\n    position: absolute;\n    top: 0;\n    right: 0;\n    height: 32px;\n    width: 32px;\n}\n\n@media (max-width: 768px) {\n    .outer-close {\n        display: none;\n    }\n}\n\n.arrow {\n    position: relative;\n    height: 32px;\n    width: 32px;\n}\n\n.heart {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.share {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}";
 
-var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n}\n\n.slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}";
+var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n}\n\n.slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}";
 
-var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    gap: 20px;\n}";
+var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n    gap: 20px;\n    width: fit-content;\n    max-width: 100vw;\n    overflow: scroll;\n    /*padding: 1rem;*/\n}";
 
-var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    display: flex;\n    justify-content: center;\n    width: 100px;\n\n    padding: 0.25rem;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n    border-radius: 50%;\n\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}";
+var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    display: flex;\n    justify-content: center;\n    width: 100px;\n\n    padding: 0.25rem;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n    border-radius: 50%;\n\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}";
 
 var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    object-fit: cover;\n}\n\n.shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
 
-var embed = ".embed {\n    width: 200px;\n    position: relative;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    background-color: #000000;\n}\n\n.embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n}";
+var embed = ".embed {\n    position: relative;\n    width: 400px;\n    aspect-ratio: 9/16;\n}\n\n.embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n    border-radius: 4px;\n}";
 
-var viewContainer = ".view-container {\n    position: relative;\n    left: 0;\n\n    display: flex;\n    flex-direction: row;\n\n\n    width: 200px;\n    aspect-ratio: 9/16;\n    gap: 160px;\n}\n\n@container slider (max-width: 768px) {\n    .view-container {\n        width: 100%;\n        height: 100%;\n        gap: 0;\n    }\n}";
+var viewContainer = ".view-container {\n    /* position */\n    position: relative;\n    left: 0;\n\n    /* layout */\n    display: flex;\n    flex-direction: row;\n    gap: 160px;\n\n    /* size */\n    width: 200px;\n    aspect-ratio: 9/16;\n}\n\n@container slider (max-width: 768px) {\n    .view-container {\n        aspect-ratio: 1/1;\n        width: 100%;\n        height: 100%;\n        gap: 0;\n    }\n}";
 
 var view = ".view {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-shrink: 0;\n\n    position: relative;\n    width: 100%;\n    height: 100%;\n\n\n    background-color: black;\n    border-radius: 6px;\n\n    cursor: pointer;\n    transition: transform 0.4s;\n}\n\n.view-inner {\n    position: relative;\n    height: 100%;\n    width: 100%;\n    border-radius: 6px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n    opacity: 0.1;\n}";
 
@@ -165,7 +231,7 @@ var canvas = ".canvas {\n    position: absolute;\n    width: 100%;\n    height: 
 
 var Interface = ".interface {\n    position: absolute;\n    width: inherit;\n    height: inherit;\n\n    display: flex;\n    flex-direction: column;\n\n    padding-inline: 4%;\n    padding-block: 8%;\n    box-sizing: border-box;\n}\n\n.interface-top {\n    top: 4%;\n    justify-content: space-between;\n    align-items: center;\n    display: flex;\n    position: relative;\n    flex-direction: row;\n}\n\n.interface-bottom {\n    margin-top: auto;\n    position: relative;\n    bottom: 4%;\n    display: flex;\n    align-self: flex-end;\n    justify-self: center;\n    flex-direction: column;\n    gap: 20%;\n}\n\n.interface-title {\n    position: absolute;\n    color: white;\n    font-weight: 700;\n    font-size: 12px;\n    left: 16%;\n}\n\n@media (max-width: 500px) {\n    .interface-title {\n        font-size: 24px;\n    }\n}";
 
-var timeline = ".timeline {\n    width: 100%;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 2px;\n    box-sizing: border-box;\n    padding-inline: 2px;\n    position: relative;\n}\n\n.progress {\n    border-radius: 1px;\n    height: 2px;\n    background-color: rgba(255, 255, 255, 0.48);\n    overflow: hidden;\n}\n\n.gauge {\n    border-radius: 1px;\n    height: 100%;\n    width: 0;\n    background-color: #FFFFFF;\n}";
+var timeline = ".timeline {\n    width: 100%;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 2px;\n    box-sizing: border-box;\n    padding-inline: 2px;\n    position: relative;\n}\n\n.progress {\n    border-radius: 1px;\n    height: 2px;\n    width: 100%;\n    background-color: rgba(255, 255, 255, 0.48);\n    overflow: hidden;\n}\n\n.gauge {\n    border-radius: 1px;\n    height: 100%;\n    width: 0;\n    background-color: #FFFFFF;\n}";
 
 var controller = ".controller {\n    position: absolute;\n    width: 144%;\n    height: 0;\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    align-items: center;\n}\n\n@container slider (max-width: 768px) {\n    .controller {\n        visibility: hidden\n    }\n}";
 
@@ -420,7 +486,6 @@ customElements.define("sw-progress", class extends HTMLElement {
     }
     connectedCallback() {
         this.classList.add("progress");
-        this.style.width = this.getAttribute("width") + "%";
         this.innerHTML = "<div class='gauge'/>";
         this.gauge = this.querySelector(".gauge");
     }
@@ -451,8 +516,8 @@ customElements.define("sw-timeline", class extends HTMLElement {
     }
     connectedCallback() {
         this.classList.add("timeline");
-        const totalTime = this.feeds.map(feed => feed.duration).reduce((acc, curr) => acc + curr, 0);
-        this.innerHTML = this.feeds.map(feed => `<sw-progress feed-id=${feed.id} duration=${feed.duration} width=${feed.duration / totalTime * 100}></sw-progress>`).join("");
+        // const totalTime = this.feeds.map(feed => feed.duration).reduce((acc, curr) => acc + curr, 0)
+        this.innerHTML = this.feeds.map(feed => `<sw-progress feed-id=${feed.id} duration=${feed.duration}></sw-progress>`).join("");
     }
     static get observedAttributes() {
         return ["current-feed-id"];
@@ -696,17 +761,16 @@ customElements.define("sw-embed", class extends HTMLElement {
         `;
         this.querySelector("img[alt='thumbnail']");
         let isHover = false;
-        this.onclick = () => {
+        this.onmouseenter = () => {
             if (!isHover) {
                 isHover = !isHover;
-                getStoryStore(this).setStoryById(this.story.id);
+                if (getStoryStore(this).currentStory === undefined)
+                    getStoryStore(this).setStoryById(this.story.id);
+                else
+                    getStoryStore(this).setStoryById(getStoryStore(this).currentStory.id);
             }
         };
-        this.onmouseleave = () => {
-            if (isHover) {
-                isHover = !isHover;
-            }
-        };
+        this.onmouseleave = () => isHover && (isHover = !isHover);
     }
 });
 
@@ -740,10 +804,13 @@ customElements.define("sw-story-container", class extends HTMLElement {
         const shape = getProperties(this)("shape") || "story";
         const stories = getStoryStore(this).stories;
         const shownStories = type === "group" ? stories : [stories[0]];
-        if (shape === "story" || shape === "shorts")
+        if (shape === "story" || shape === "shorts") {
             this.innerHTML = shownStories.map(shownStory => `<sw-${shape} story-id=${shownStory.id}></sw-${shape}>`).join("");
-        if (shape === "embed")
+        }
+        if (shape === "embed") {
             this.innerHTML = `<sw-embed story-id=${stories[0].id}></sw-embed>`;
+            getDOM(this).querySelector("sw-layer").remove();
+        }
         this.readStories.checkReadStories();
     }
 });
@@ -774,32 +841,25 @@ customElements.define("shorts-works", class extends HTMLElement {
         super(...arguments);
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
-        this.mount = false;
     }
-    async connectedCallback() {
-        // this.stories = await getStories()
+    connectedCallback() {
+        this.stories = JSON.parse(this.getAttribute("src"));
+        this.storyStore = new StoryStore(this);
+        this.DOM.innerHTML = `<sw-story-container></sw-story-container>`;
+        this.DOM.querySelector("sw-story-container").style.pointerEvents = "none";
+        this.style.cursor = "grab";
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = css;
+        this.DOM.appendChild(styleSheet);
     }
     // 해당 기능들은 디자인을 위한 것으므로 추후 일시적으로 가져오는 방향으로 시도
     static get observedAttributes() {
-        return ["radius", "size", "gap", "topColor", "endColor", "src", "shape"];
+        return ["radius", "size", "gap", "topColor", "endColor"];
     }
-    async attributeChangedCallback() {
-        this.stories = JSON.parse(this.getAttribute("src"));
-        if (this.stories !== null) {
-            this.storyStore = new StoryStore(this);
-            this.DOM.innerHTML = `
-                <sw-story-container></sw-story-container>
-                <sw-layer hidden></sw-layer>
-            `;
-            const styleSheet = document.createElement("style");
-            styleSheet.textContent = css;
-            this.DOM.appendChild(styleSheet);
-            // this.mount = true
-            // 세팅 관련 정리 필요
-            setStoryContainer(this.DOM.querySelector("sw-story-container"));
-            this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
-            this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
-            this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
-        }
+    attributeChangedCallback() {
+        setStoryContainer(this.DOM.querySelector("sw-story-container"));
+        this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
+        this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
+        this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
     }
 });
