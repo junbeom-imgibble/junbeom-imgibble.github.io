@@ -116,7 +116,7 @@ window.addEventListener("mousemove", (event) => {
         moveDirectionX = event.clientX;
         // const closedElement = document.elementsFromPoint(event.clientX, event.clientY).filter(element => validateTarget(element))
         const shortsworks = document.querySelector("shorts-works[id='preview']");
-        shortsworks.style.position = "absolute";
+        shortsworks.style.position = "fixed";
         shortsworks.style.left = (event.pageX - dragPositionX) + "px";
         shortsworks.style.top = (event.pageY - dragPositionY) + "px";
         if (currentDirectionX === 0)
