@@ -80,6 +80,7 @@ let dragPositionX;
 let dragPositionY;
 window.addEventListener("mousedown", (event) => {
     if (settings.mode === "edit" && event.target.tagName === "SHORTS-WORKS") {
+        event.target.style.position = "absolute";
         settings.isDragging = true;
         dragPositionX = event.clientX - event.target.getBoundingClientRect().left;
         dragPositionY = event.clientY - event.target.getBoundingClientRect().top;
@@ -94,7 +95,7 @@ window.addEventListener("mouseup", () => {
         settings.isDragging = false;
         document.querySelector("shorts-works[id='preview']").remove();
         document.querySelector("#preview-space").remove();
-        pointedElement.insertAdjacentHTML("afterend", `<shorts-works shape=${settings.currentType} style="position: absolute" id="preview" src=${JSON.stringify(posts)}></shorts-works>`);
+        pointedElement.insertAdjacentHTML("afterend", `<shorts-works shape=${settings.currentType} id="preview" src=${JSON.stringify(posts)}></shorts-works>`);
         if (!attach) {
             attach = !attach;
             const { left, top, width, height, bottom, right } = document.querySelector("shorts-works[id='preview']").getBoundingClientRect();
@@ -113,7 +114,6 @@ window.addEventListener("mousemove", (event) => {
         moveDirectionX = event.clientX;
         // const closedElement = document.elementsFromPoint(event.clientX, event.clientY).filter(element => validateTarget(element))
         const shortsworks = document.querySelector("shorts-works[id='preview']");
-        shortsworks.style.position = "absolute";
         shortsworks.style.left = (event.pageX - dragPositionX) + "px";
         shortsworks.style.top = (event.pageY - dragPositionY) + "px";
         if (currentDirectionX === 0)
@@ -125,7 +125,7 @@ window.addEventListener("mousemove", (event) => {
             prevSpace !== null && prevSpace.remove();
             pointedElement = currentPointed;
             const { width, height } = shortsworks.getBoundingClientRect();
-            const space = `<div id="preview-space" style="border: 1px dashed lightgray; width: ${width}; height: ${height}"/>`;
+            const space = `<div id="preview-space" style="position: relative; border: 1px dashed lightgray; width: ${width}; height: ${height}"/>`;
             pointedElement.insertAdjacentHTML("afterend", space);
         }
         if (attach) {
@@ -578,6 +578,12 @@ customElements.define("sw-icon", class extends HTMLElement {
             case "elipsis":
                 this.classList.add("elipsis");
                 container.innerHTML = elipsis;
+                break;
+            case "play":
+                this.classList.add("play");
+                break;
+            case "pause":
+                this.classList.add("pause");
                 break;
         }
     }
