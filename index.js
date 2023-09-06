@@ -127,8 +127,9 @@ window.addEventListener("mousemove", (event) => {
             const prevSpace = document.querySelector("#preview-space");
             prevSpace !== null && prevSpace.remove();
             pointedElement = currentPointed;
-            const { width, height } = shortsworks.getBoundingClientRect();
-            const space = `<div id="preview-space" style="position: relative; border: 1px dashed lightgray; width: ${width}; height: ${height}"/>`;
+            shortsworks.getBoundingClientRect();
+            // const space = `<div id="preview-space" style="position: relative; border: 1px dashed lightgray; width: ${width}; height: ${height}"/>`
+            const space = `<div id="preview-space" style="position: relative; border: 1px dashed lightgray; width: 300px; height: 300px"/>`;
             pointedElement.insertAdjacentHTML("afterend", space);
         }
         if (attach) {
