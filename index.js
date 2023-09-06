@@ -74,13 +74,14 @@ window.addEventListener("click", (event) => {
         if (settings.currentElement.tagName === "SHORTS-WORKS")
             shortsworks.remove();
         settings.setMode("edit");
+        const { left, top, right, bottom } = shortsworks.getBoundingClientRect();
+        sendMessage({ title: "attach", data: { left: left, top: bottom, attach: true } });
     }
 });
 let dragPositionX;
 let dragPositionY;
 window.addEventListener("mousedown", (event) => {
     if (settings.mode === "edit" && event.target.tagName === "SHORTS-WORKS") {
-        event.target.style.position = "absolute";
         settings.isDragging = true;
         dragPositionX = event.clientX - event.target.getBoundingClientRect().left;
         dragPositionY = event.clientY - event.target.getBoundingClientRect().top;
@@ -114,6 +115,7 @@ window.addEventListener("mousemove", (event) => {
         moveDirectionX = event.clientX;
         // const closedElement = document.elementsFromPoint(event.clientX, event.clientY).filter(element => validateTarget(element))
         const shortsworks = document.querySelector("shorts-works[id='preview']");
+        shortsworks.style.position = "absolute";
         shortsworks.style.left = (event.pageX - dragPositionX) + "px";
         shortsworks.style.top = (event.pageY - dragPositionY) + "px";
         if (currentDirectionX === 0)
