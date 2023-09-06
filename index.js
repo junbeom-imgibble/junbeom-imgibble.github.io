@@ -74,6 +74,7 @@ window.addEventListener("click", (event) => {
         if (settings.currentElement.tagName === "SHORTS-WORKS")
             shortsworks.remove();
         settings.setMode("edit");
+        attach = true;
         const { left, top, right, bottom } = shortsworks.getBoundingClientRect();
         sendMessage({ title: "attach", data: { left: left, top: bottom, attach: true } });
     }
@@ -100,7 +101,7 @@ window.addEventListener("mouseup", () => {
         if (!attach) {
             attach = !attach;
             const { left, top, width, height, bottom, right } = document.querySelector("shorts-works[id='preview']").getBoundingClientRect();
-            sendMessage({ title: "attach", data: { left: right, top: bottom, attach } });
+            sendMessage({ title: "attach", data: { left, top: bottom, attach } });
             document.querySelector("shorts-works").style.position = "relative";
         }
     }
