@@ -117,8 +117,8 @@ window.addEventListener("mousemove", (event) => {
         // const closedElement = document.elementsFromPoint(event.clientX, event.clientY).filter(element => validateTarget(element))
         const shortsworks = document.querySelector("shorts-works[id='preview']");
         shortsworks.style.position = "fixed";
-        shortsworks.style.left = (event.pageX - dragPositionX) + "px";
-        shortsworks.style.top = (event.pageY - dragPositionY) + "px";
+        shortsworks.style.left = (event.clientX - dragPositionX) + "px";
+        shortsworks.style.top = (event.clientY - dragPositionY) + "px";
         if (currentDirectionX === 0)
             return;
         const { left, top, right, bottom, width, height } = shortsworks.getBoundingClientRect();
@@ -212,7 +212,7 @@ class StoryStore {
     }
 }
 
-var init = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scrollbar-width: none;\n    -webkit-user-drag: none;\n}   \n\n*::-webkit-scrollbar {\n    display: none;\n}";
+var init = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scrollbar-width: none;\n    -webkit-user-drag: none;\n    font-size: 14px;\n}   \n\n*::-webkit-scrollbar {\n    display: none;\n}";
 
 var icon = ".icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 1;\n    color: rgba(255, 255, 255, 0.48);\n    position: relative;\n    height: 16px;\n    width: 16px;\n\n}\n\n@media (max-width: 768px) {\n    .icon {\n        height: 32px;\n        width: 32px;\n    }\n}\n\n.icon:hover {\n    color: white\n}\n\n.icon-container {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    justify-content: end;\n    gap: 4px;\n}\n\n.outer-close {\n    position: absolute;\n    top: 0;\n    right: 0;\n    height: 32px;\n    width: 32px;\n}\n\n@media (max-width: 768px) {\n    .outer-close {\n        display: none;\n    }\n}\n\n.arrow {\n    position: relative;\n    height: 32px;\n    width: 32px;\n}\n\n.heart {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.share {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}";
 
