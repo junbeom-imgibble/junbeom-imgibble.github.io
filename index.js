@@ -808,6 +808,7 @@ observeMessage("frame")(({ size }) => {
 
 // document.body.appendChild(preview)
 document.body.appendChild(styleSheet);
+let currentAttachedElement = null;
 window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         preview.clientWidth;
@@ -819,8 +820,9 @@ window.addEventListener("mouseover", event => {
         // elements = elements.filter(element => element.tagName !== "BODY")
         // elements = elements.filter(element => element.tagName !== "HTML")
         // const attachElement = elements.filter(element => element.getBoundingClientRect().width>= 800)[0]
-        if (currentTarget.getBoundingClientRect().width >= 800) {
+        if (currentTarget.getBoundingClientRect().width >= 800 && currentTarget !== editor && currentTarget !== currentAttachedElement) {
             currentTarget.insertAdjacentElement("afterend", preview);
+            currentAttachedElement = currentTarget;
         }
         // if(attachElement != undefined && attachElement !== editor && attachElement !== currentAttachedElement) {
         //     preview.style.visibility = "visible"
