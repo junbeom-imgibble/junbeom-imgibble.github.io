@@ -692,7 +692,7 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
-var styles = ".preview {\n    position: relative;\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attached {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n}\n\n.editor {\n\n}";
+var styles = "* {\n    pointer-events: auto;\n}\n\n/* 외부 CSS 먹히는 현상 발생 */\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attached {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n}\n\n.editor {\n\n}";
 
 const styleSheet = document.createElement("style");
 styleSheet.textContent = styles;
@@ -730,6 +730,7 @@ getData().then(data => {
     previewWidget.customize();
     previewWidget.style.visibility = "hidden";
 });
+// 외부 CSS 먹히는 방지 필요
 const preview = document.createElement("div");
 preview.classList.add("preview");
 preview.appendChild(previewWidget);
@@ -837,6 +838,7 @@ editor.addEventListener("click", () => {
     }
 });
 window.addEventListener("scroll", () => {
+    console.log("scroll");
     if (mode.state === "edit") {
         const { left, bottom } = editor.getBoundingClientRect();
         window.parent.postMessage({
