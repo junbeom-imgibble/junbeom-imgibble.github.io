@@ -1,200 +1,3 @@
-class Settings {
-    constructor() {
-        this.isDragging = false;
-        this.currentType = "story";
-        this.setMode = newMode => this.mode = newMode;
-        this.removePreviewWidget = () => document.querySelector("shorts-works[id='preview']") !== null
-            && document.querySelector("shorts-works[id='preview']").remove();
-        this.getPreview = () => document.querySelector("shorts-works[id='preview']");
-        this.mode = "preview";
-        this.currentElement = undefined;
-    }
-}
-var settings = new Settings();
-
-// const ORIGIN_URL
-function sendMessage(message) {
-    window.parent.postMessage(message, "*");
-}
-// const previewMode = document.createElement("style")
-// previewMode.id = "shorts-works-preview-mode"
-// previewMode.innerHTML = "body:active { pointer-events: none; } * { cursor: pointer }"
-window.onmessage = message => {
-    const title = message.data.title;
-    const data = message.data.data;
-    if (title === "mode") {
-        settings.mode = data;
-        if (data === "none") {
-            settings.removePreviewWidget();
-            settings.currentElement = undefined;
-            document.getElementById("shorts-works-preview-mode").remove();
-        }
-    }
-    if (title === "attributes") {
-        const shortsworks = document.querySelector("shorts-works[id='preview']") || document.querySelector("shorts-works");
-        // const shortsworks = document.querySelector("shorts-works[id='preview']") !== null ?  document.querySelector("shorts-works[id='preview']") :  document.querySelector("shorts-works")
-        Object.entries(data).forEach(([key, value]) => settings.settings[key.toString()] = value.toString());
-        Object.entries(data).forEach(([key, value]) => shortsworks.setAttribute(key.toString(), value.toString()));
-    }
-    if (title === "shape") {
-        settings.currentType = data;
-        const shortsworks = document.querySelector("shorts-works");
-        shortsworks.outerHTML = `<shorts-works id="preview" shape=${data} src=${JSON.stringify(posts)}></shorts-works>`;
-    }
-};
-
-const previewMode = document.createElement("style");
-previewMode.id = "preview-mode";
-previewMode.textContent = `body:active { pointer-events: none }`;
-document.body.cloneNode(true);
-// preview와 real shorts-works 분리 필요
-function validateTarget(element) {
-    return element.tagName !== "HTML"
-        && element.tagName !== "BODY"
-        && element.closest("shorts-works")?.id !== "preview"
-        && element !== settings.currentElement
-        && element.id !== "preview-space";
-}
-window.addEventListener("mouseover", mouseEvent => {
-    if (settings.mode === "preview") {
-        const element = mouseEvent.target;
-        if (validateTarget(element)) {
-            settings.currentElement !== undefined && document.querySelector("shorts-works[id='preview']").remove();
-            const shortsworks = `<shorts-works id="preview" src=${JSON.stringify(posts)} style="opacity: 0.5"></shorts-works>`;
-            element.insertAdjacentHTML("afterend", shortsworks);
-            settings.currentElement = element;
-        }
-    }
-});
-window.addEventListener("click", (event) => {
-    if (settings.mode === "preview") {
-        const shortsworks = document.querySelector("shorts-works[id='preview']");
-        shortsworks.style.opacity = "1";
-        shortsworks.style.cursor = "pointer";
-        if (settings.currentElement.tagName === "SHORTS-WORKS")
-            shortsworks.remove();
-        settings.setMode("edit");
-        attach = true;
-        const { left, top, right, bottom } = shortsworks.getBoundingClientRect();
-        sendMessage({ title: "attach", data: { left: left, top: bottom, attach: true } });
-    }
-}, false);
-let dragPositionX;
-let dragPositionY;
-window.addEventListener("mousedown", (event) => {
-    if (settings.mode === "edit" && event.target.tagName === "SHORTS-WORKS") {
-        settings.isDragging = true;
-        dragPositionX = event.clientX - event.target.getBoundingClientRect().left;
-        dragPositionY = event.clientY - event.target.getBoundingClientRect().top;
-        moveDirectionY = event.clientY;
-        moveDirectionX = event.clientX;
-    }
-});
-let pointedElement = null;
-let attach = false;
-window.addEventListener("mouseup", () => {
-    if (settings.mode === "edit" && settings.isDragging) {
-        settings.isDragging = false;
-        document.querySelector("shorts-works[id='preview']").remove();
-        document.querySelector("#preview-space").remove();
-        pointedElement.insertAdjacentHTML("afterend", `<shorts-works shape=${settings.currentType} id="preview" src=${JSON.stringify(posts)}></shorts-works>`);
-        if (!attach) {
-            attach = !attach;
-            const { left, top, width, height, bottom, right } = document.querySelector("shorts-works[id='preview']").getBoundingClientRect();
-            sendMessage({ title: "attach", data: { left, top: bottom, attach } });
-            document.querySelector("shorts-works").style.position = "relative";
-        }
-    }
-});
-let moveDirectionX = null;
-let moveDirectionY = null;
-window.addEventListener("mousemove", (event) => {
-    if (settings.isDragging) {
-        let currentDirectionX = moveDirectionX - event.clientX;
-        moveDirectionY - event.clientY;
-        moveDirectionY = event.clientY;
-        moveDirectionX = event.clientX;
-        // const closedElement = document.elementsFromPoint(event.clientX, event.clientY).filter(element => validateTarget(element))
-        const shortsworks = document.querySelector("shorts-works[id='preview']");
-        shortsworks.style.position = "fixed";
-        shortsworks.style.zIndex = "999";
-        shortsworks.style.left = (event.clientX - dragPositionX) + "px";
-        shortsworks.style.top = (event.clientY - dragPositionY) + "px";
-        if (currentDirectionX === 0)
-            return;
-        const { left, top, right, bottom, width, height } = shortsworks.getBoundingClientRect();
-        let currentPointed = document.elementsFromPoint(left, top + height / 2).filter(element => validateTarget(element))[0];
-        if (currentPointed !== undefined && currentPointed !== pointedElement && currentPointed !== null) {
-            const prevSpace = document.querySelector("#preview-space");
-            prevSpace !== null && prevSpace.remove();
-            pointedElement = currentPointed;
-            shortsworks.getBoundingClientRect();
-            // const space = `<div id="preview-space" style="position: relative; border: 1px dashed lightgray; width: ${width}; height: ${height}"/>`
-            const space = `<div id="preview-space" style="position: relative; border: 1px dashed lightgray; width: 300px; height: 300px"/>`;
-            pointedElement.insertAdjacentHTML("afterend", space);
-        }
-        if (attach) {
-            attach = !attach;
-            const { left, top } = document.querySelector("shorts-works[id='preview']").getBoundingClientRect();
-            sendMessage({ title: "attach", data: { left, top, attach } });
-        }
-    }
-});
-window.onscroll = () => {
-    const shortsworks = document.querySelector("shorts-works[id='preview']");
-    const { left, bottom } = shortsworks.getBoundingClientRect();
-    sendMessage({ title: "attach", data: { left, top: bottom, attach: true } });
-};
-
-const backendURL = "http://localhost:3001";
-
-async function getStories() {
-    const response = await fetch(backendURL + "/publish");
-    if (response.ok)
-        return response.json();
-}
-
-let posts;
-if (document.referrer.includes("localhost")) {
-    // const prevPreview = document.getElementById("shorts-works-preview")
-    // prevPreview !== undefined && prevPreview.remove()
-    const preview = document.createElement("script");
-    preview.id = "shorts-works-preview";
-    document.body.appendChild(preview);
-}
-const getSettings = async () => {
-    const response = await fetch("http://localhost:3001/settings");
-    if (response.ok)
-        return response.json();
-};
-const getDesign = async () => {
-    const response = await fetch("http://localhost:3001/design");
-    if (response.ok)
-        return response.json();
-};
-async function attachWidget() {
-    posts = await getStories();
-    const settings = await getSettings();
-    await getDesign();
-    //     if(settings.settings.auto === true) {
-    //         if(window.location.href === "") {
-    //
-    //         }
-    //     }
-    if (settings.order === "random")
-        posts.sort(() => Math.random() - 0.5);
-    // if(settings.auto === "top") document.body.insertAdjacentHTML("afterbegin", `<shorts-works></shorts-works>`)
-    // 위젯이 없는 경우 또는 여러개인 경우
-    // const shortsworks = document.querySelector("shorts-works")
-    // shortsworks.setAttribute("src", JSON.stringify(posts))
-    // shortsworks.setAttribute("shape", "shorts")
-    document.querySelectorAll("shorts-works").forEach(widget => widget.setAttribute("src", JSON.stringify(posts)));
-    // shortsworks.outerHTML = design.tag
-    //     .replace("<shorts-works", `<shorts-works src=${JSON.stringify(posts)} `)
-    // shortsworks.setAttribute("shape", "shorts")
-}
-attachWidget();
-
 class StoryStore {
     constructor(element) {
         this.getStoryById = (selectedStoryId) => this.stories.find(story => story.id === selectedStoryId);
@@ -227,7 +30,7 @@ var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100v
 
 var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n    gap: 20px;\n    width: fit-content;\n    max-width: 100vw;\n    overflow: scroll;\n    padding: 24px;\n}";
 
-var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    display: flex;\n    justify-content: center;\n    width: 100px;\n\n    padding: 0.25rem;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n    border-radius: 50%;\n\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}";
+var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    width: 100px;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}";
 
 var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n}\n\n.shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
 
@@ -297,7 +100,12 @@ function setStoryIcon(element) {
     const radius = getAttribute("radius") || "50%";
     const topColor = getAttribute("topColor") || "#BC3BE9";
     const bottomColor = getAttribute("bottomColor") || "#EC702B";
-    icon.style.width = size + "px";
+    if (size === "small")
+        icon.style.width = 68 + "px";
+    if (size === "basic")
+        icon.style.width = 90 + "px";
+    if (size === "large")
+        icon.style.width = 110 + "px";
     if (radius !== null) {
         icon.style.borderRadius = radius + "%";
         image.style.borderRadius = radius + "%";
@@ -361,7 +169,7 @@ customElements.define("sw-canvas", class extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === "current-feed-id") {
             const { type, content, position: { width, height, position_x, position_y, rotate } } = getFeedStore(this).currentFeed;
-            this.innerHTML = `<sw-feed-element  type=${type} src=${content} width=${width} height=${height} left=${position_x} top=${position_y} rotate=${rotate}></sw-feed-element>`;
+            this.innerHTML = `<sw-feed-element type=${type} src=${content} width=${width} height=${height} left=${position_x} top=${position_y} rotate=${rotate}></sw-feed-element>`;
             const feedElements = getFeedStore(this).currentFeed.elements;
             if (feedElements !== undefined)
                 this.innerHTML += feedElements.map(element => {
@@ -433,7 +241,7 @@ customElements.define("sw-shorts", class extends HTMLElement {
             <div class="preview-container"/>
         `;
         this.preview = this.querySelector(".preview-container");
-        this.onmouseover = () => {
+        this.onmouseenter = () => {
             if (!this.isHover) {
                 this.isHover = !this.isHover;
                 this.showPreview();
@@ -774,15 +582,15 @@ customElements.define("sw-embed", class extends HTMLElement {
             <img alt="thumbnail" src="${this.story.thumbnail}" class="embed-thumbnail"/>
             <sw-slider></sw-slider>
         `;
-        this.querySelector("img[alt='thumbnail']");
         let isHover = false;
+        const { currentStory, setStoryById } = getStoryStore(this);
         this.onmouseenter = () => {
             if (!isHover) {
                 isHover = !isHover;
-                if (getStoryStore(this).currentStory === undefined)
-                    getStoryStore(this).setStoryById(this.story.id);
+                if (currentStory === undefined)
+                    setStoryById(this.story.id);
                 else
-                    getStoryStore(this).setStoryById(getStoryStore(this).currentStory.id);
+                    setStoryById(currentStory.id);
             }
         };
         this.onmouseleave = () => isHover && (isHover = !isHover);
@@ -847,8 +655,13 @@ function setIcon(element) {
         element.style.height = "100vh";
         element.style.width = "100%";
     }
-    else
-        element.style.width = size + "px";
+    if (size === "small")
+        element.style.width = 120 + "px";
+    if (size === "basic")
+        element.style.width = 160 + "px";
+    if (size === "large")
+        element.style.width = 200 + "px";
+    // else element.style.width = size + "px"
 }
 
 customElements.define("shorts-works", class extends HTMLElement {
@@ -857,24 +670,169 @@ customElements.define("shorts-works", class extends HTMLElement {
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
     }
-    connectedCallback() {
-        this.stories = JSON.parse(this.getAttribute("src"));
+    async getData(data) {
+        // this.stories = JSON.parse(this.getAttribute("src"))
+        this.stories = data;
         this.storyStore = new StoryStore(this);
-        this.DOM.innerHTML = `<sw-story-container></sw-story-container>`;
-        this.DOM.querySelector("sw-story-container").style.pointerEvents = "none";
-        this.style.cursor = "grab";
+    }
+    render() {
+        this.DOM.innerHTML = `
+            <sw-story-container></sw-story-container>
+            <sw-layer hidden></sw-layer>
+        `;
         const styleSheet = document.createElement("style");
         styleSheet.textContent = css;
         this.DOM.appendChild(styleSheet);
     }
-    // 해당 기능들은 디자인을 위한 것으므로 추후 일시적으로 가져오는 방향으로 시도
-    static get observedAttributes() {
-        return ["radius", "size", "gap", "padding", "topColor", "endColor"];
-    }
-    attributeChangedCallback() {
+    customize() {
         setStoryContainer(this.DOM.querySelector("sw-story-container"));
         this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
         this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
         this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
+    }
+});
+
+var styles = ".preview {\n    position: relative;\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attached {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n}\n\n.editor {\n\n}";
+
+const styleSheet = document.createElement("style");
+styleSheet.textContent = styles;
+
+const backendURL = "http://localhost:3001";
+
+const getStories = async () => {
+    const response = await fetch(backendURL + "/publish");
+    if (response.ok)
+        return response.json();
+};
+const getAttributes = async () => {
+    const response = await fetch("http://localhost:3001/design");
+    if (response.ok)
+        return response.json();
+};
+const getSetting = async () => {
+    const response = await fetch("http://localhost:3001/settings");
+    if (response.ok)
+        return response.json();
+};
+
+const getData = async () => {
+    const stories = await getStories();
+    const attributes = await getAttributes();
+    const setting = await getSetting();
+    return { stories, attributes, setting };
+};
+// export default await getData()
+
+const previewWidget = document.createElement("shorts-works");
+getData().then(data => {
+    previewWidget.getData(data.stories);
+    previewWidget.render();
+    previewWidget.customize();
+    previewWidget.style.visibility = "hidden";
+});
+const preview = document.createElement("div");
+preview.classList.add("preview");
+preview.appendChild(previewWidget);
+const plus = document.createElement("div");
+plus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <path d="M28 15.9423C28 16.75 27.3654 17.3269 26.6154 17.3269H17.3846V26.5577C17.3846 27.3654 16.75 28 16 28C15.1923 28 14.6154 27.3654 14.6154 26.5577V17.3269H5.38462C4.57692 17.3269 4 16.75 4 16C4 15.1923 4.57692 14.5577 5.38462 14.5577H14.6154V5.32692C14.6154 4.57692 15.1923 4 16 4C16.75 4 17.3846 4.57692 17.3846 5.32692V14.5577H26.6154C27.3654 14.5577 28 15.1923 28 15.9423Z" fill="#C6CAD0"/>
+</svg>`;
+plus.classList.add("plus");
+preview.appendChild(plus);
+const editWidget = document.createElement("shorts-works");
+getData().then(data => {
+    editWidget.getData(data.stories);
+    editWidget.render();
+    editWidget.customize();
+    editWidget.style.pointerEvents = "none";
+});
+const editor = document.createElement("div");
+editor.classList.add("editor");
+editor.insertAdjacentElement("afterbegin", editWidget);
+
+const mode = {
+    state: "preview"
+};
+
+// index
+const sendMessage = (message) => window.parent.postMessage(message, "*");
+const observeMessage = (observe) => callback => window.addEventListener("message", ({ data: { title, data } }) => title === observe && callback(data));
+observeMessage("shape")(data => {
+    const shape = data.shape;
+    // editor.setAttribute("shape", shape)
+    const innerWidget = editor.querySelector("shorts-works");
+    innerWidget.setAttribute("shape", shape);
+    innerWidget.render();
+    const { left, bottom } = editor.getBoundingClientRect();
+    sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
+});
+observeMessage("size")(({ size }) => {
+    // let newSize
+    // if(size === "small") newSize = 68
+    // if(size === "basic") newSize = 90
+    // if(size === "large") newSize = 110
+    const innerWidget = editor.querySelector("shorts-works");
+    // 커스터마이즈 부분에서 해소하도록 변경 필요
+    // 68, 90, 110
+    // const currentShape =
+    // 120, 160, 200
+    innerWidget.setAttribute("size", size);
+    innerWidget.customize();
+    const { left, bottom } = editor.getBoundingClientRect();
+    sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
+});
+// hooks
+// observeMessage("attributes")((attribute) =>
+//     Object.entries(attribute).forEach(([name, value]) =>
+//         preview.setAttribute(name, value)))
+//
+// observeMessage("shape")(({shape}) => preview.changeShape(shape))
+// export function attachPreviewController(state: boolean) {
+//     const {left, bottom} = preview.element.getBoundingClientRect()
+// }
+
+// document.body.appendChild(preview)
+document.body.appendChild(styleSheet);
+window.addEventListener("mouseover", event => {
+    if (mode.state === "preview") {
+        event.target.insertAdjacentElement("afterend", preview);
+    }
+});
+window.addEventListener("click", event => {
+    if (mode.state === "preview") {
+        preview.insertAdjacentElement("afterend", editor);
+        preview.remove();
+        mode.state = "attach";
+    }
+    if (mode.state === "edit") {
+        if (event.target !== editor) {
+            editor.classList.remove("attached");
+            mode.state = "preview";
+            // 중복
+            const { left, bottom } = editor.getBoundingClientRect();
+            window.parent.postMessage({
+                title: "attach",
+                data: {
+                    left: left,
+                    top: bottom,
+                    state: false
+                }
+            }, "*");
+        }
+    }
+});
+editor.addEventListener("click", () => {
+    if (mode.state === "attach") {
+        editor.classList.add("attached");
+        mode.state = "edit";
+        const { left, bottom } = editor.getBoundingClientRect();
+        window.parent.postMessage({
+            title: "attach",
+            data: {
+                left: left,
+                top: bottom,
+                state: true
+            }
+        }, "*");
     }
 });
