@@ -782,6 +782,8 @@ observeMessage("size")(({ size }) => {
     const { left, bottom } = editor.getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
+observeMessage("frame")(({ size }) => {
+});
 // hooks
 // observeMessage("attributes")((attribute) =>
 //     Object.entries(attribute).forEach(([name, value]) =>
@@ -795,15 +797,13 @@ observeMessage("size")(({ size }) => {
 // document.body.appendChild(preview)
 document.body.appendChild(styleSheet);
 window.addEventListener("mouseover", event => {
-    if (mode.state === "preview") {
+    if (mode.state === "preview" || mode.state === "attach") {
         const width = preview.getBoundingClientRect().width;
         const currentTarget = event.target;
         const currentWidth = currentTarget.getBoundingClientRect().width;
-        if (currentWidth >= width && currentTarget !== preview) {
+        if (currentWidth >= width && currentTarget !== preview && currentTarget !== editor) {
             preview.style.visibility = "visible";
             currentTarget.insertAdjacentElement("afterend", preview);
-            console.log('add preview');
-            console.log(currentWidth);
         }
         else {
             preview.style.visibility = "hidden";
@@ -818,7 +818,7 @@ window.addEventListener("mouseover", event => {
     // console.log(document.elementFromPoint(event.clientX, event.clientY))
 });
 window.addEventListener("click", event => {
-    if (mode.state === "preview") {
+    if (mode.state === "preview" || mode.state === "attach") {
         preview.insertAdjacentElement("afterend", editor);
         preview.remove();
         mode.state = "attach";
@@ -826,7 +826,7 @@ window.addEventListener("click", event => {
     if (mode.state === "edit") {
         if (event.target !== editor) {
             editor.classList.remove("attached");
-            mode.state = "preview";
+            mode.state = "attach";
             // 중복
             const { left, bottom } = editor.getBoundingClientRect();
             window.parent.postMessage({
