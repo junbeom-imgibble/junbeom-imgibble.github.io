@@ -808,27 +808,29 @@ observeMessage("frame")(({ size }) => {
 
 // document.body.appendChild(preview)
 document.body.appendChild(styleSheet);
-let currentAttachedElement = null;
 window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         preview.clientWidth;
         // console.log(preview.querySelector("shorts-works").clientWidth)
         const currentTarget = event.target;
         currentTarget.getBoundingClientRect().width;
-        let elements = document.elementsFromPoint(event.clientX, event.clientY);
+        // let elements = document.elementsFromPoint(event.clientX, event.clientY)
         // const attachableElement = elements.find((element: HTMLElement) => Number(element.getBoundingClientRect().width) >= width)
-        elements = elements.filter(element => element.tagName !== "BODY");
-        elements = elements.filter(element => element.tagName !== "HTML");
-        const attachElement = elements.filter(element => element.getBoundingClientRect().width >= 800)[0];
-        if (attachElement != undefined && attachElement !== editor && attachElement !== currentAttachedElement) {
-            //     preview.style.visibility = "visible"
-            attachElement.insertAdjacentElement("afterend", preview);
-            currentAttachedElement = attachElement;
+        // elements = elements.filter(element => element.tagName !== "BODY")
+        // elements = elements.filter(element => element.tagName !== "HTML")
+        // const attachElement = elements.filter(element => element.getBoundingClientRect().width>= 800)[0]
+        if (currentTarget.getBoundingClientRect().width >= 800) {
+            currentTarget.insertAdjacentElement("afterend", preview);
         }
-        else {
-            preview.remove();
-            // preview.style.visibility = "hidden"
-        }
+        // if(attachElement != undefined && attachElement !== editor && attachElement !== currentAttachedElement) {
+        //     preview.style.visibility = "visible"
+        // attachElement.insertAdjacentElement("afterend", preview)
+        // currentAttachedElement = attachElement
+        //
+        // } else {
+        //         preview.remove()
+        // preview.style.visibility = "hidden"
+        // }
         // elements.forEach(element => console.log(element.getBoundingClientRect().width >= 800))
         // if(attachableElement.tagName !== "BODY" && attachableElement.getBoundingClientRect().width >= width && attachableElement !== preview) {
         //     attachableElement.insertAdjacentElement("afterend", preview)
