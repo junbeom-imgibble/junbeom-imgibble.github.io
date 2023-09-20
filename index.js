@@ -28,7 +28,7 @@ var icon = ".icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 1;\n
 
 var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n}\n\n.slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}";
 
-var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n    gap: 20px;\n\n    min-width: 800px;\n    max-width: 100vw;\n    overflow: scroll;\n\n    padding: 24px;\n}";
+var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n    gap: 20px;\n\n    max-width: 100vw;\n    overflow: scroll;\n\n    padding: 24px;\n}";
 
 var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    width: 100px;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}";
 
@@ -116,8 +116,16 @@ function setStoryIcon(element) {
 }
 
 function setStoryContainer(element) {
-    element.style.gap = (getProperties(element)("gap") || "20") + "px";
-    element.style.padding = (getProperties(element)("padding") || "20") + "px";
+    // set min-width
+    // const frame = getProperties(element)("frame") || 0
+    // if(frame <= 400) {
+    //     element.style.width = "300px"
+    // } else {
+    //     element.style.width = frame + "px"
+    // }
+    element.style.width = (getProperties(element)("frame") || 800) + "px";
+    element.style.gap = (getProperties(element)("gap") || 20) + "px";
+    element.style.padding = (getProperties(element)("padding") || 20) + "px";
 }
 
 customElements.define("sw-story", class extends HTMLElement {
@@ -692,7 +700,7 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
-var styles = "* {\n    pointer-events: auto;\n}\n\n/* 외부 CSS 먹히는 현상 발생 */\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attached {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n}\n\n.editor {\n\n}";
+var styles = "* {\n    pointer-events: auto;\n}\n\n/* 외부 CSS 먹히는 현상 발생 */\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attached {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n}\n\n.editor {\n    width: fit-content;\n    height: fit-content;\n}";
 
 const styleSheet = document.createElement("style");
 styleSheet.textContent = styles;
@@ -783,6 +791,10 @@ observeMessage("size")(({ size }) => {
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
 observeMessage("frame")(({ size }) => {
+    console.log(size);
+    const innerWidget = editor.querySelector("shorts-works");
+    innerWidget.setAttribute("frame", size);
+    innerWidget.customize();
 });
 // hooks
 // observeMessage("attributes")((attribute) =>
