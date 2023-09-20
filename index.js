@@ -824,6 +824,9 @@ window.addEventListener("mouseover", event => {
             currentTarget.insertAdjacentElement("afterend", preview);
             currentAttachedElement = currentTarget;
         }
+        else {
+            preview.remove();
+        }
         // if(attachElement != undefined && attachElement !== editor && attachElement !== currentAttachedElement) {
         //     preview.style.visibility = "visible"
         // attachElement.insertAdjacentElement("afterend", preview)
