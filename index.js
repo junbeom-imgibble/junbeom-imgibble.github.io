@@ -836,3 +836,17 @@ editor.addEventListener("click", () => {
         }, "*");
     }
 });
+window.addEventListener("scroll", () => {
+    if (mode.state === "edit") {
+        const { left, bottom } = editor.getBoundingClientRect();
+        window.parent.postMessage({
+            title: "attach",
+            data: {
+                left: left,
+                top: bottom,
+                state: true
+            }
+        }, "*");
+    }
+});
+// 간격 찾기
