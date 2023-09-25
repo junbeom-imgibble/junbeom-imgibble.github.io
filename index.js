@@ -818,7 +818,9 @@ window.addEventListener("mouseover", event => {
         // elements = elements.filter(element => element.tagName !== "BODY")
         // elements = elements.filter(element => element.tagName !== "HTML")
         // const attachElement = elements.filter(element => element.getBoundingClientRect().width>= 800)[0]
-        if (currentTarget.getBoundingClientRect().width >= 800 && currentTarget !== editor && currentTarget !== currentAttachedElement) {
+        if (
+        // currentTarget.getBoundingClientRect().width >= 800 &&
+        currentTarget !== editor && currentTarget !== currentAttachedElement) {
             currentTarget.insertAdjacentElement("afterend", preview);
             currentAttachedElement = currentTarget;
         }
