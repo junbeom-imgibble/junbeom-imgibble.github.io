@@ -678,8 +678,7 @@ customElements.define("shorts-works", class extends HTMLElement {
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
     }
-    async getData(data) {
-        // this.stories = JSON.parse(this.getAttribute("src"))
+    getData(data) {
         this.stories = data;
         this.storyStore = new StoryStore(this);
     }
@@ -705,7 +704,7 @@ var styles = "* {\n    pointer-events: auto;\n}\n\n/* 외부 CSS 먹히는 현�
 const styleSheet = document.createElement("style");
 styleSheet.textContent = styles;
 
-const backendURL = "http://localhost:3001";
+const backendURL = "https://port-0-imgibble-dummy-db-54ouz2lllrv2ned.sel3.cloudtype.app";
 
 const getStories = async () => {
     const response = await fetch(backendURL + "/publish");
@@ -713,12 +712,12 @@ const getStories = async () => {
         return response.json();
 };
 const getAttributes = async () => {
-    const response = await fetch("http://localhost:3001/design");
+    const response = await fetch(backendURL + "/design");
     if (response.ok)
         return response.json();
 };
 const getSetting = async () => {
-    const response = await fetch("http://localhost:3001/settings");
+    const response = await fetch(backendURL + "/settings");
     if (response.ok)
         return response.json();
 };
@@ -729,7 +728,6 @@ const getData = async () => {
     const setting = await getSetting();
     return { stories, attributes, setting };
 };
-// export default await getData()
 
 const previewWidget = document.createElement("shorts-works");
 getData().then(data => {
