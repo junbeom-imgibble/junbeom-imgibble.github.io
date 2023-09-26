@@ -762,11 +762,11 @@ window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         const detectedElements = document.elementsFromPoint(event.clientX, event.clientY)
             .filter(element => element.tagName !== "BODY" && element.tagName !== "HTML"
+            // for cafe24
             && element.id !== "wrap" && element.id !== "container" && element.id !== "contents");
-        console.log(detectedElements);
         const detectedElement = detectedElements.pop();
         if (detectedElement !== editor && detectedElement !== currentAttachedElement && detectedElement !== undefined) {
-            detectedElement.insertAdjacentElement("afterend", container);
+            detectedElement.insertAdjacentElement("beforebegin", container);
             if (mode.state === "preview")
                 currentAttachedElement = detectedElement;
         }
