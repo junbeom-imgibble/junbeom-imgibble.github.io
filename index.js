@@ -702,6 +702,7 @@ styleSheet.textContent = styles;
 document.body.appendChild(styleSheet);
 
 const mode = { state: "preview" };
+const setMode = (newMode) => mode.state = newMode;
 
 const backendURL = "https://port-0-imgibble-dummy-db-54ouz2lllrv2ned.sel3.cloudtype.app";
 
@@ -739,19 +740,17 @@ const editor = document.createElement("div");
 editor.classList.add("editor");
 editor.insertAdjacentElement("afterbegin", editWidget);
 
-const previewWidget = document.createElement("shorts-works");
+const widget = document.createElement("shorts-works");
 getData().then(data => {
-    previewWidget.getData(data.stories);
-    previewWidget.render();
-    previewWidget.style.visibility = "hidden";
+    widget.getData(data.stories);
+    widget.render();
+    widget.style.visibility = "hidden";
 });
 const preview = document.createElement("div");
 preview.classList.add("preview");
-preview.appendChild(previewWidget);
+preview.appendChild(widget);
 const plus = document.createElement("div");
-plus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <path d="M28 15.9423C28 16.75 27.3654 17.3269 26.6154 17.3269H17.3846V26.5577C17.3846 27.3654 16.75 28 16 28C15.1923 28 14.6154 27.3654 14.6154 26.5577V17.3269H5.38462C4.57692 17.3269 4 16.75 4 16C4 15.1923 4.57692 14.5577 5.38462 14.5577H14.6154V5.32692C14.6154 4.57692 15.1923 4 16 4C16.75 4 17.3846 4.57692 17.3846 5.32692V14.5577H26.6154C27.3654 14.5577 28 15.1923 28 15.9423Z" fill="#C6CAD0"/>
-</svg>`;
+plus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M28 15.9423C28 16.75 27.3654 17.3269 26.6154 17.3269H17.3846V26.5577C17.3846 27.3654 16.75 28 16 28C15.1923 28 14.6154 27.3654 14.6154 26.5577V17.3269H5.38462C4.57692 17.3269 4 16.75 4 16C4 15.1923 4.57692 14.5577 5.38462 14.5577H14.6154V5.32692C14.6154 4.57692 15.1923 4 16 4C16.75 4 17.3846 4.57692 17.3846 5.32692V14.5577H26.6154C27.3654 14.5577 28 15.1923 28 15.9423Z" fill="#C6CAD0"/></svg>`;
 plus.classList.add("plus");
 preview.appendChild(plus);
 
@@ -772,16 +771,15 @@ window.addEventListener("mouseover", event => {
 
 window.addEventListener("click", event => {
     if (mode.state === "preview" || mode.state === "attach") {
+        setMode("attach");
         preview.insertAdjacentElement("afterend", editor);
-        mode.state = "attach";
+        preview.remove();
     }
-    if (mode.state === "edit") {
-        if (event.target !== editor) {
-            mode.state = "attach";
-            editor.classList.remove("attached");
-            const { left, bottom } = editor.getBoundingClientRect();
-            window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: false } }, "*");
-        }
+    if (mode.state === "edit" && event.target !== editor) {
+        setMode("attach");
+        editor.classList.remove("attached");
+        const { left, bottom } = editor.getBoundingClientRect();
+        window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: false } }, "*");
     }
 });
 
