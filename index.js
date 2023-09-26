@@ -831,3 +831,6 @@ observeMessage("frame")(({ size }) => {
 // export function attachPreviewController(state: boolean) {
 //     const {left, bottom} = preview.element.getBoundingClientRect()
 // }
+
+console.log("asd");
+window.addEventListener("click", () => console.log("click"));
