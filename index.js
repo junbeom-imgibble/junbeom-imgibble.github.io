@@ -755,7 +755,6 @@ plus.classList.add("plus");
 preview.appendChild(plus);
 
 let currentAttachedElement = null;
-// 프리뷰 상태일 때 부착
 window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         const detectedElements = document.elementsFromPoint(event.clientX, event.clientY)
@@ -800,3 +799,34 @@ window.addEventListener("scroll", () => {
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
     }
 });
+
+const sendMessage = (message) => window.parent.postMessage(message, "*");
+const observeMessage = (observe) => (callback) => window.addEventListener("message", ({ data: { title, data } }) => title === observe && callback(data));
+
+observeMessage("shape")(({ shape }) => {
+    // const widget = editor.querySelector("shorts-works") as WidgetElement
+    // widget.setAttribute("shape", shape)
+    // widget.render()s
+    // const {left, bottom} = editor.getBoundingClientRect()
+    // sendMessage({title: "attach", data: {left, top: bottom, state: true}})
+});
+observeMessage("size")(({ size }) => {
+    const innerWidget = editor.querySelector("shorts-works");
+    innerWidget.setAttribute("size", size);
+    innerWidget.customize();
+    const { left, bottom } = editor.getBoundingClientRect();
+    sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
+});
+observeMessage("frame")(({ size }) => {
+    const widget = editor.querySelector("shorts-works");
+    widget.setAttribute("frame", size);
+    widget.customize();
+});
+// observeMessage("attributes")((attribute) =>
+//     Object.entries(attribute).forEach(([name, value]) =>
+//         preview.setAttribute(name, value)))
+//
+// observeMessage("shape")(({shape}) => preview.changeShape(shape))
+// export function attachPreviewController(state: boolean) {
+//     const {left, bottom} = preview.element.getBoundingClientRect()
+// }
