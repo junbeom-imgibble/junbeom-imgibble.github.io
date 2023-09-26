@@ -758,7 +758,8 @@ let currentAttachedElement = null;
 window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         const detectedElements = document.elementsFromPoint(event.clientX, event.clientY)
-            .filter(element => element.tagName !== "BODY" && element.tagName !== "HTML");
+            .filter(element => element.tagName !== "BODY" && element.tagName !== "HTML"
+            && element.id !== "wrap" && element.id !== "container" && element.id !== "contents");
         console.log(detectedElements);
         const detectedElement = detectedElements.pop();
         if (detectedElement !== editor && detectedElement !== currentAttachedElement && detectedElement !== undefined) {
