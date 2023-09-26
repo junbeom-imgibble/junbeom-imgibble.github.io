@@ -738,7 +738,11 @@ getData().then(data => {
 });
 const editor = document.createElement("div");
 editor.classList.add("editor");
-editor.insertAdjacentElement("afterbegin", editWidget);
+// editor.insertAdjacentElement("afterbegin", editWidget)
+editor.appendChild(editWidget);
+const container$1 = document.createElement("div");
+container$1.classList.add("container");
+container$1.appendChild(editor);
 
 const widget = document.createElement("shorts-works");
 getData().then(data => {
@@ -762,10 +766,11 @@ window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         const detectedElements = document.elementsFromPoint(event.clientX, event.clientY)
             .filter(element => element.tagName !== "BODY" && element.tagName !== "HTML"
+            // && !element.classList.contains("container")
             // for cafe24
             && element.id !== "wrap" && element.id !== "container" && element.id !== "contents");
         const detectedElement = detectedElements.pop();
-        if (detectedElement !== editor && detectedElement !== currentAttachedElement && detectedElement !== undefined) {
+        if (detectedElement !== container$1 && detectedElement !== currentAttachedElement && detectedElement !== undefined) {
             detectedElement.insertAdjacentElement("beforebegin", container);
             if (mode.state === "preview")
                 currentAttachedElement = detectedElement;
@@ -776,23 +781,23 @@ window.addEventListener("mouseover", event => {
 window.addEventListener("click", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         setMode("attach");
-        container.insertAdjacentElement("afterend", editor);
+        container.insertAdjacentElement("afterend", container$1);
         container.remove();
     }
-    if (mode.state === "edit" && event.target !== editor) {
+    if (mode.state === "edit" && event.target !== container$1) {
         setMode("attach");
-        editor.classList.remove("attached");
-        const { left, bottom } = editor.getBoundingClientRect();
+        container$1.classList.remove("attached");
+        const { left, bottom } = container$1.getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: false } }, "*");
     }
 });
 
-editor.addEventListener("click", () => {
+container$1.addEventListener("click", () => {
     if (mode.state === "attach") {
         mode.state = "edit";
-        editor.classList.add("attached");
+        container$1.classList.add("attached");
         container.remove();
-        const { left, bottom } = editor.getBoundingClientRect();
+        const { left, bottom } = container$1.getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
     }
 });
@@ -800,7 +805,7 @@ editor.addEventListener("click", () => {
 // whenScroll
 window.addEventListener("scroll", () => {
     if (mode.state === "edit") {
-        const { left, bottom } = editor.getBoundingClientRect();
+        const { left, bottom } = container$1.getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
     }
 });
@@ -816,14 +821,14 @@ observeMessage("shape")(({ shape }) => {
     // sendMessage({title: "attach", data: {left, top: bottom, state: true}})
 });
 observeMessage("size")(({ size }) => {
-    const innerWidget = editor.querySelector("shorts-works");
+    const innerWidget = container$1.querySelector("shorts-works");
     innerWidget.setAttribute("size", size);
     innerWidget.customize();
-    const { left, bottom } = editor.getBoundingClientRect();
+    const { left, bottom } = container$1.getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
 observeMessage("frame")(({ size }) => {
-    const widget = editor.querySelector("shorts-works");
+    const widget = container$1.querySelector("shorts-works");
     widget.setAttribute("frame", size);
     widget.customize();
 });
