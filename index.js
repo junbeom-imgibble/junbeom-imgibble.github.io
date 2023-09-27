@@ -819,7 +819,7 @@ window.addEventListener("click", event => {
     if (mode.state === "edit" && event.target.id !== "editor") {
         // console.log(event.target.id)
         setMode("preview");
-        container$1.classList.remove("attached");
+        container$1.querySelector("#editor").classList.remove("attach");
         const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: false } }, "*");
     }
