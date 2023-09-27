@@ -820,7 +820,7 @@ window.addEventListener("click", event => {
         // console.log(event.target.id)
         setMode("preview");
         container$1.classList.remove("attached");
-        const { left, bottom } = container$1.getBoundingClientRect();
+        const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: false } }, "*");
     }
 });
@@ -838,7 +838,8 @@ container$1.addEventListener("click", event => {
 // whenScroll
 window.addEventListener("scroll", () => {
     if (mode.state === "edit") {
-        const { left, bottom } = container$1.getBoundingClientRect();
+        // 중복
+        const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
     }
 });
@@ -851,7 +852,7 @@ observeMessage("shape")(({ shape }) => {
     widget.setAttribute("shape", shape);
     widget.render();
     widget.customize();
-    // 以묐났
+    // 중복
     const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
@@ -859,7 +860,7 @@ observeMessage("size")(({ size }) => {
     const innerWidget = container$1.querySelector("shorts-works");
     innerWidget.setAttribute("size", size);
     innerWidget.customize();
-    // 以묐났
+    // 중복
     const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
