@@ -124,6 +124,9 @@ function setStoryContainer(element) {
     //     element.style.width = frame + "px"
     // }
     element.style.width = (getProperties(element)("frame") || 800) + "px";
+    if (getProperties(element)("frame") === "basic")
+        element.style.width = "800px";
+    // element.style.width = 800 + "px"
     element.style.gap = (getProperties(element)("gap") || 20) + "px";
     element.style.padding = (getProperties(element)("padding") || 20) + "px";
 }
@@ -695,9 +698,12 @@ customElements.define("shorts-works", class extends HTMLElement {
         this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
         this.DOM.querySelectorAll("sw-embed").forEach((element) => setIcon(element));
     }
+    getHeight() {
+        return this.DOM.querySelector("sw-story-container").clientHeight;
+    }
 });
 
-var styles = "* {\n    pointer-events: auto;\n}\n\n.container {\n    position: relative;\n\n    animation: appearance 0.6s forwards;\n    overflow: hidden;\n\n    display: flex;\n    width: 100vw;\n    align-items: center;\n    justify-content: center;\n}\n\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attach {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n}\n\n.editor {\n    width: fit-content;\n    height: fit-content;\n}";
+var styles = "* {\n    pointer-events: auto;\n}\n\n@keyframes appearance {\n    from {height: 0}\n    to {height: fit-content}\n}\n\n.appear {\n    /*transition: height 1s ease;*/\n    /*border: 4px solid orange;*/\n}\n\n.container {\n\n\n    position: relative;\n    overflow: hidden;\n\n    display: flex;\n    width: 100vw;\n\n    align-items: center;\n    justify-content: center;\n\n    padding-block: 8px;\n}\n\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attach {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n}\n\n.editor {\n    width: fit-content;\n    height: fit-content;\n}";
 
 const styleSheet = document.createElement("style");
 styleSheet.textContent = styles;
@@ -731,19 +737,20 @@ const getData = async () => {
     return { stories, attributes, setting };
 };
 
-const editWidget = document.createElement("shorts-works");
+const widget$1 = document.createElement("shorts-works");
 getData().then(data => {
-    editWidget.getData(data.stories);
-    editWidget.render();
-    editWidget.customize();
-    editWidget.style.pointerEvents = "none";
+    widget$1.getData(data.stories);
+    widget$1.render();
+    widget$1.customize();
+    widget$1.style.pointerEvents = "none";
 });
 const editor = document.createElement("div");
 editor.id = "editor";
 editor.classList.add("editor");
 // editor.insertAdjacentElement("afterbegin", editWidget)
-editor.appendChild(editWidget);
+editor.appendChild(widget$1);
 const container$1 = document.createElement("div");
+container$1.id = "editor-container";
 container$1.style.width = "100%";
 container$1.style.display = "flex";
 container$1.style.alignItems = "center";
@@ -754,10 +761,13 @@ const widget = document.createElement("shorts-works");
 getData().then(data => {
     widget.getData(data.stories);
     widget.render();
+    widget.customize();
     widget.style.visibility = "hidden";
 });
 const container = document.createElement("div");
+container.id = "preview-container";
 container.classList.add("container");
+// container.classList.add("appear")
 const preview = document.createElement("div");
 preview.classList.add("preview");
 const plus = document.createElement("div");
@@ -767,7 +777,9 @@ preview.appendChild(plus);
 preview.appendChild(widget);
 container.appendChild(preview);
 
-let currentAttachedElement = null;
+const preAttachedElement = { current: null };
+const currentAttachedElement = { current: null };
+
 window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         const detectedElements = document.elementsFromPoint(event.clientX, event.clientY)
@@ -776,10 +788,22 @@ window.addEventListener("mouseover", event => {
             // for cafe24
             && element.id !== "wrap" && element.id !== "container" && element.id !== "contents");
         const detectedElement = detectedElements.pop();
-        if (detectedElement !== container$1 && detectedElement !== currentAttachedElement && detectedElement !== undefined) {
+        if (detectedElement !== container$1
+            && detectedElement !== currentAttachedElement.current
+            && detectedElement !== undefined) {
             detectedElement.insertAdjacentElement("beforebegin", container);
+            preAttachedElement.current = detectedElement;
+            // let currentHeight = preview.querySelector("shorts-works").getHeight()
+            // preview.style.height = currentHeight + "px"
+            // preview.style.transition = "height 1s"
+            // preview.style.height = "300px"
+            // preview.style.height = "300px"
             // if(mode.state === "preview")
-            currentAttachedElement = detectedElement;
+            // console.log(preview.querySelector("shorts-works").getBoundingClientRect())
+            container.animate([
+                { height: "0%" },
+                { height: container.querySelector("shorts-works").getHeight() + "px" }
+            ], 300);
             setMode("attach");
         }
     }
@@ -789,9 +813,11 @@ window.addEventListener("click", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         setMode("attach");
         container.insertAdjacentElement("afterend", container$1);
+        currentAttachedElement.current = preAttachedElement.current;
         container.remove();
     }
-    if (mode.state === "edit" && event.target !== container$1) {
+    if (mode.state === "edit" && event.target.id !== "editor") {
+        // console.log(event.target.id)
         setMode("preview");
         container$1.classList.remove("attached");
         const { left, bottom } = container$1.getBoundingClientRect();
@@ -804,7 +830,7 @@ container$1.addEventListener("click", event => {
         mode.state = "edit";
         container$1.querySelector("#editor").classList.add("attach");
         container.remove();
-        const { left, bottom } = container$1.getBoundingClientRect();
+        const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
     }
 });
@@ -821,17 +847,20 @@ const sendMessage = (message) => window.parent.postMessage(message, "*");
 const observeMessage = (observe) => (callback) => window.addEventListener("message", ({ data: { title, data } }) => title === observe && callback(data));
 
 observeMessage("shape")(({ shape }) => {
-    // const widget = editor.querySelector("shorts-works") as WidgetElement
-    // widget.setAttribute("shape", shape)
-    // widget.render()s
-    // const {left, bottom} = editor.getBoundingClientRect()
-    // sendMessage({title: "attach", data: {left, top: bottom, state: true}})
+    const widget = container$1.querySelector("shorts-works");
+    widget.setAttribute("shape", shape);
+    widget.render();
+    widget.customize();
+    // 중복
+    const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
+    sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
 observeMessage("size")(({ size }) => {
     const innerWidget = container$1.querySelector("shorts-works");
     innerWidget.setAttribute("size", size);
     innerWidget.customize();
-    const { left, bottom } = container$1.getBoundingClientRect();
+    // 중복
+    const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
 observeMessage("frame")(({ size }) => {
@@ -847,3 +876,5 @@ observeMessage("frame")(({ size }) => {
 // export function attachPreviewController(state: boolean) {
 //     const {left, bottom} = preview.element.getBoundingClientRect()
 // }
+
+console.log("asd");
