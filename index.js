@@ -674,6 +674,8 @@ customElements.define("shorts-works", class extends HTMLElement {
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
     }
+    // connectedCallback() {
+    // }
     getData(data) {
         this.stories = data;
         this.storyStore = new StoryStore(this);
@@ -695,7 +697,7 @@ customElements.define("shorts-works", class extends HTMLElement {
     }
 });
 
-var styles = "* {\n    pointer-events: auto;\n}\n\n.container {\n    display: flex;\n    width: 100vw;\n    align-items: center;\n    justify-content: center;\n}\n\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attached {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n}\n\n.editor {\n    width: fit-content;\n    height: fit-content;\n}";
+var styles = "* {\n    pointer-events: auto;\n}\n\n.container {\n    position: relative;\n\n    animation: appearance 0.6s forwards;\n    overflow: hidden;\n\n    display: flex;\n    width: 100vw;\n    align-items: center;\n    justify-content: center;\n}\n\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attach {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n}\n\n.editor {\n    width: fit-content;\n    height: fit-content;\n}";
 
 const styleSheet = document.createElement("style");
 styleSheet.textContent = styles;
@@ -737,11 +739,15 @@ getData().then(data => {
     editWidget.style.pointerEvents = "none";
 });
 const editor = document.createElement("div");
+editor.id = "editor";
 editor.classList.add("editor");
 // editor.insertAdjacentElement("afterbegin", editWidget)
 editor.appendChild(editWidget);
 const container$1 = document.createElement("div");
-container$1.classList.add("container");
+container$1.style.width = "100%";
+container$1.style.display = "flex";
+container$1.style.alignItems = "center";
+container$1.style.justifyContent = "center";
 container$1.appendChild(editor);
 
 const widget = document.createElement("shorts-works");
@@ -766,14 +772,15 @@ window.addEventListener("mouseover", event => {
     if (mode.state === "preview" || mode.state === "attach") {
         const detectedElements = document.elementsFromPoint(event.clientX, event.clientY)
             .filter(element => element.tagName !== "BODY" && element.tagName !== "HTML"
-            // && !element.classList.contains("container")
+            && !element.classList.contains("container")
             // for cafe24
             && element.id !== "wrap" && element.id !== "container" && element.id !== "contents");
         const detectedElement = detectedElements.pop();
         if (detectedElement !== container$1 && detectedElement !== currentAttachedElement && detectedElement !== undefined) {
             detectedElement.insertAdjacentElement("beforebegin", container);
-            if (mode.state === "preview")
-                currentAttachedElement = detectedElement;
+            // if(mode.state === "preview")
+            currentAttachedElement = detectedElement;
+            setMode("attach");
         }
     }
 });
@@ -785,17 +792,17 @@ window.addEventListener("click", event => {
         container.remove();
     }
     if (mode.state === "edit" && event.target !== container$1) {
-        setMode("attach");
+        setMode("preview");
         container$1.classList.remove("attached");
         const { left, bottom } = container$1.getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: false } }, "*");
     }
 });
 
-container$1.addEventListener("click", () => {
+container$1.addEventListener("click", event => {
     if (mode.state === "attach") {
         mode.state = "edit";
-        container$1.classList.add("attached");
+        container$1.querySelector("#editor").classList.add("attach");
         container.remove();
         const { left, bottom } = container$1.getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
@@ -840,6 +847,3 @@ observeMessage("frame")(({ size }) => {
 // export function attachPreviewController(state: boolean) {
 //     const {left, bottom} = preview.element.getBoundingClientRect()
 // }
-
-console.log("asd");
-window.addEventListener("click", () => console.log("click"));
