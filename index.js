@@ -851,7 +851,7 @@ observeMessage("shape")(({ shape }) => {
     widget.setAttribute("shape", shape);
     widget.render();
     widget.customize();
-    // 중복
+    // 以묐났
     const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
@@ -859,7 +859,7 @@ observeMessage("size")(({ size }) => {
     const innerWidget = container$1.querySelector("shorts-works");
     innerWidget.setAttribute("size", size);
     innerWidget.customize();
-    // 중복
+    // 以묐났
     const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
