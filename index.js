@@ -28,15 +28,15 @@ var icon = ".icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 1;\n
 
 var layer = ".layer {\n    position: fixed;\n    height: 100vh;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n}\n\n.slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}";
 
-var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n    gap: 20px;\n\n    max-width: 100vw;\n    overflow: scroll;\n\n    padding: 24px;\n}";
+var storyContainer = ".story-container {\n    display: flex;\n    flex-direction: row;\n    justify-content: start;\n\n    gap: 20px;\n\n    max-width: 100vw;\n    overflow: scroll;\n    width: 800px;\n\n    padding: 24px;\n}";
 
-var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    width: 100px;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}";
+var story = ".story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n}\n\n.story-icon {    \n    position: relative;\n    /* 커스터마이즈 필요 */\n    width: 90px;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n}\n\n.story-label {\n    /*position*/\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}";
 
-var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n}\n\n.shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
+var shorts = ".shorts {\n    width: 140px;\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n    flex-shrink: 0;\n}\n\n.shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n}\n\n.shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}";
 
 var embed = ".embed {\n    position: relative;\n    width: 400px;\n    aspect-ratio: 9/16;\n}\n\n.embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n    border-radius: 4px;\n}";
 
-var viewContainer = ".view-container {\n    /* position */\n    position: relative;\n    left: 0;\n\n    /* layout */\n    display: flex;\n    flex-direction: row;\n    gap: 160px;\n\n    /* size */\n    width: 200px;\n    aspect-ratio: 9/16;\n}\n\n@container slider (max-width: 768px) {\n    .view-container {\n        aspect-ratio: 1/1;\n        width: 100%;\n        height: 100%;\n        gap: 0;\n    }\n}";
+var viewContainer = ".view-container {\n    /* position */\n    position: relative;\n    left: 0;\n\n    /* layout */\n    display: flex;\n    flex-direction: row;\n    gap: 160px;\n\n    /* size */\n    width: 200px;\n    aspect-ratio: 9/16;\n\n}\n\n@container slider (max-width: 768px) {\n    .view-container {\n        aspect-ratio: 1/1;\n        width: 100%;\n        height: 100%;\n        gap: 0;\n    }\n}";
 
 var view = ".view {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-shrink: 0;\n\n    position: relative;\n    width: 100%;\n    height: 100%;\n\n\n    background-color: black;\n    border-radius: 6px;\n\n    cursor: pointer;\n    transition: transform 0.4s;\n}\n\n.view-inner {\n    position: relative;\n    height: 100%;\n    width: 100%;\n    border-radius: 6px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n    opacity: 0.1;\n}";
 
@@ -96,7 +96,7 @@ function setStoryIcon(element) {
     const label = element.querySelector(".story-label");
     const image = element.querySelector(".story-image");
     const getAttribute = getProperties(element);
-    const size = getAttribute("size") || "100";
+    const size = getAttribute("size") || 90;
     const radius = getAttribute("radius") || "50%";
     const topColor = getAttribute("topColor") || "#BC3BE9";
     const bottomColor = getAttribute("bottomColor") || "#EC702B";
@@ -657,7 +657,7 @@ customElements.define("sw-layer", class extends HTMLElement {
 
 function setIcon(element) {
     const getAttribute = getProperties(element);
-    const size = getAttribute("size") || "200";
+    const size = getAttribute("size") || 160;
     if (size === "full") {
         element.style.height = "100vh";
         element.style.width = "100%";
@@ -677,8 +677,6 @@ customElements.define("shorts-works", class extends HTMLElement {
         this.DOM = this.attachShadow({ mode: "closed" });
         this.properties = this.attributes;
     }
-    // connectedCallback() {
-    // }
     getData(data) {
         this.stories = data;
         this.storyStore = new StoryStore(this);
@@ -701,9 +699,31 @@ customElements.define("shorts-works", class extends HTMLElement {
     getHeight() {
         return this.DOM.querySelector("sw-story-container").clientHeight;
     }
+    static get observedAttributes() {
+        return ["data", "size", "shape", "topColor", "bottomColor"];
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === "data") {
+            const data = JSON.parse(this.getAttribute("data"));
+            this.getData(data);
+            this.render();
+        }
+        if (name === "shape") {
+            this.render();
+            this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
+            this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
+        }
+        if (name === "size") {
+            this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
+            this.DOM.querySelectorAll("sw-shorts").forEach((element) => setIcon(element));
+        }
+        // if(name === "topColor" || name === "bottomColor") {
+        this.DOM.querySelectorAll("sw-story").forEach((element) => setStoryIcon(element));
+        // }
+    }
 });
 
-var styles = "* {\n    pointer-events: auto;\n}\n\n@keyframes appearance {\n    from {height: 0}\n    to {height: fit-content}\n}\n\n.appear {\n    /*transition: height 1s ease;*/\n    /*border: 4px solid orange;*/\n}\n\n.container {\n\n\n    position: relative;\n    overflow: hidden;\n\n    display: flex;\n    width: 100vw;\n\n    align-items: center;\n    justify-content: center;\n\n    padding-block: 8px;\n}\n\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attach {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n}\n\n.editor {\n    width: fit-content;\n    height: fit-content;\n}";
+var styles = "* {\n    pointer-events: auto;\n}\n\n@keyframes appearance {\n    from {height: 0}\n    to {height: fit-content}\n}\n\n.appear {\n    /*transition: height 1s ease;*/\n    /*border: 4px solid orange;*/\n}\n\n.container {\n\n    position: relative;\n    overflow: hidden;\n\n    display: flex;\n    width: 100vw;\n\n    align-items: center;\n    justify-content: center;\n\n    padding-block: 8px;\n    margin-block: 8px;\n}\n\n.preview {\n    position: relative;\n    border: 2px dashed #C6CAD0 !important;\n    border-radius: 8px !important;\n    background-color: transparent !important;\n\n    width: fit-content;\n    height: fit-content;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.plus {\n    position: absolute;\n}\n\n.attach {\n    border: 2px dashed #C6CAD0;\n    border-radius: 8px;\n    box-sizing: content-box;\n\n    width: fit-content;\n    height: fit-content;\n    margin-block: 8px;\n\n}\n\n.edit-margin {\n    /* 46 + 8 */\n    margin-bottom: 54px;\n}\n\n.editor {\n    width: fit-content;\n    height: fit-content;\n}";
 
 const styleSheet = document.createElement("style");
 styleSheet.textContent = styles;
@@ -737,18 +757,17 @@ const getData = async () => {
     return { stories, attributes, setting };
 };
 
-const widget$1 = document.createElement("shorts-works");
+const widget$2 = document.createElement("shorts-works");
 getData().then(data => {
-    widget$1.getData(data.stories);
-    widget$1.render();
-    widget$1.customize();
-    widget$1.style.pointerEvents = "none";
+    widget$2.getData(data.stories);
+    widget$2.render();
+    widget$2.customize();
+    widget$2.style.pointerEvents = "none";
 });
 const editor = document.createElement("div");
 editor.id = "editor";
 editor.classList.add("editor");
-// editor.insertAdjacentElement("afterbegin", editWidget)
-editor.appendChild(widget$1);
+editor.appendChild(widget$2);
 const container$1 = document.createElement("div");
 container$1.id = "editor-container";
 container$1.style.width = "100%";
@@ -757,12 +776,12 @@ container$1.style.alignItems = "center";
 container$1.style.justifyContent = "center";
 container$1.appendChild(editor);
 
-const widget = document.createElement("shorts-works");
+const widget$1 = document.createElement("shorts-works");
 getData().then(data => {
-    widget.getData(data.stories);
-    widget.render();
-    widget.customize();
-    widget.style.visibility = "hidden";
+    widget$1.getData(data.stories);
+    widget$1.render();
+    widget$1.customize();
+    widget$1.style.visibility = "hidden";
 });
 const container = document.createElement("div");
 container.id = "preview-container";
@@ -774,7 +793,7 @@ const plus = document.createElement("div");
 plus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M28 15.9423C28 16.75 27.3654 17.3269 26.6154 17.3269H17.3846V26.5577C17.3846 27.3654 16.75 28 16 28C15.1923 28 14.6154 27.3654 14.6154 26.5577V17.3269H5.38462C4.57692 17.3269 4 16.75 4 16C4 15.1923 4.57692 14.5577 5.38462 14.5577H14.6154V5.32692C14.6154 4.57692 15.1923 4 16 4C16.75 4 17.3846 4.57692 17.3846 5.32692V14.5577H26.6154C27.3654 14.5577 28 15.1923 28 15.9423Z" fill="#C6CAD0"/></svg>`;
 plus.classList.add("plus");
 preview.appendChild(plus);
-preview.appendChild(widget);
+preview.appendChild(widget$1);
 container.appendChild(preview);
 
 const preAttachedElement = { current: null };
@@ -799,7 +818,6 @@ window.addEventListener("mouseover", event => {
             // preview.style.height = "300px"
             // preview.style.height = "300px"
             // if(mode.state === "preview")
-            // console.log(preview.querySelector("shorts-works").getBoundingClientRect())
             container.animate([
                 { height: "0%" },
                 { height: container.querySelector("shorts-works").getHeight() + "px" }
@@ -817,9 +835,9 @@ window.addEventListener("click", event => {
         container.remove();
     }
     if (mode.state === "edit" && event.target.id !== "editor") {
-        // console.log(event.target.id)
         setMode("preview");
         container$1.querySelector("#editor").classList.remove("attach");
+        container$1.querySelector("#editor").classList.remove("edit-margin");
         const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: false } }, "*");
     }
@@ -829,6 +847,7 @@ container$1.addEventListener("click", event => {
     if (mode.state === "attach") {
         mode.state = "edit";
         container$1.querySelector("#editor").classList.add("attach");
+        container$1.querySelector("#editor").classList.add("edit-margin");
         container.remove();
         const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
@@ -838,7 +857,6 @@ container$1.addEventListener("click", event => {
 // whenScroll
 window.addEventListener("scroll", () => {
     if (mode.state === "edit") {
-        // 중복
         const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
         window.parent.postMessage({ title: "attach", data: { left: left, top: bottom, state: true } }, "*");
     }
@@ -847,8 +865,12 @@ window.addEventListener("scroll", () => {
 const sendMessage = (message) => window.parent.postMessage(message, "*");
 const observeMessage = (observe) => (callback) => window.addEventListener("message", ({ data: { title, data } }) => title === observe && callback(data));
 
+const widget = container$1.querySelector("shorts-works");
+const previewWidget = container.querySelector("shorts-works");
 observeMessage("shape")(({ shape }) => {
-    const widget = container$1.querySelector("shorts-works");
+    previewWidget.setAttribute("shape", shape);
+    previewWidget.render();
+    previewWidget.customize();
     widget.setAttribute("shape", shape);
     widget.render();
     widget.customize();
@@ -857,16 +879,22 @@ observeMessage("shape")(({ shape }) => {
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
 observeMessage("size")(({ size }) => {
-    const innerWidget = container$1.querySelector("shorts-works");
-    innerWidget.setAttribute("size", size);
-    innerWidget.customize();
-    // 중복
+    previewWidget.setAttribute("size", size);
+    previewWidget.render();
+    previewWidget.customize();
+    widget.setAttribute("size", size);
+    widget.render();
+    widget.customize();
+    // 통신 중복
     const { left, bottom } = container$1.querySelector("#editor").getBoundingClientRect();
     sendMessage({ title: "attach", data: { left, top: bottom, state: true } });
 });
 observeMessage("frame")(({ size }) => {
-    const widget = container$1.querySelector("shorts-works");
+    previewWidget.setAttribute("frame", size);
+    previewWidget.render();
+    previewWidget.customize();
     widget.setAttribute("frame", size);
+    widget.render();
     widget.customize();
 });
 // observeMessage("attributes")((attribute) =>
@@ -877,5 +905,3 @@ observeMessage("frame")(({ size }) => {
 // export function attachPreviewController(state: boolean) {
 //     const {left, bottom} = preview.element.getBoundingClientRect()
 // }
-
-console.log("asd");
