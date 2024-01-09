@@ -12,6 +12,7 @@ function sendMaxHeight() {
 function createSpace(elementName) {
     const element = document.createElement("div");
     element.id = elementName;
+    element.style.border = "1px solid red";
     return element;
 }
 const selectingSpace = createSpace("selecting-space");
@@ -62,50 +63,6 @@ observeMessage("initPreviewHeight")(({ data }) => {
     attachedSpace.style.height = data.params;
     selectingSpace.style.height = data.params;
 });
-//     previewWidget.setAttribute("shape", shape)
-//     previewWidget.render()
-//     previewWidget.customize()
-//
-//     widget.setAttribute("shape", shape)
-//     widget.render()
-//     widget.customize()
-//
-//     attachController()
-// })
-//
-// observeMessage("size")(({size}) => {
-//     previewWidget.setAttribute("size", size)
-//     previewWidget.render()
-//     previewWidget.customize()
-//
-//     widget.setAttribute("size", size)
-//     widget.render()
-//     widget.customize()
-//
-//     attachController()
-// })
-//
-// observeMessage("frame")(({size}) => {
-//     previewWidget.setAttribute("frame", size)
-//     previewWidget.render()
-//     previewWidget.customize()
-//
-//     widget.setAttribute("frame", size)
-//     widget.render()
-//     widget.customize()
-//
-//     attachController()
-// })
-//
-// // observeMessage("attributes")((attribute) =>
-// //     Object.entries(attribute).forEach(([name, value]) =>
-// //         preview.setAttribute(name, value)))
-// //
-// // observeMessage("shape")(({shape}) => preview.changeShape(shape))
-//
-// // export function attachPreviewController(state: boolean) {
-// //     const {left, bottom} = preview.element.getBoundingClientRect()
-// // }
 
 function sendElementPosition(func, element) {
     const currentPosition = element.getBoundingClientRect();
@@ -140,7 +97,6 @@ window.addEventListener("mousemove", (event) => {
     // const bottomStartPointElement = findFirstElement(0, 10)
     // if(validateElement(topStartPointElement) || validateElement(bottomStartPointElement)) return;
     // if(topStartPointElement !== bottomStartPointElement) {
-    // console.log(target)
     target.insertAdjacentElement("beforebegin", selectingSpace);
     elements.tempAttachedElement = target;
     sendElementPosition("setCurrentPosition", selectingSpace);
