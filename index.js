@@ -12,7 +12,8 @@ function sendMaxHeight() {
 function createSpace(elementName) {
     const element = document.createElement("div");
     element.id = elementName;
-    element.style.border = "1px solid red";
+    // height 변경 인식 안되는 현상
+    element.style.height = "150px";
     return element;
 }
 const selectingSpace = createSpace("selecting-space");
