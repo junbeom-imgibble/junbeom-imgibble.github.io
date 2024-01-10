@@ -14,6 +14,8 @@ function createSpace(elementName) {
     element.id = elementName;
     // height 변경 인식 안되는 현상
     element.style.height = "150px";
+    element.style.width = "100vw";
+    element.style.border = "1px solid red";
     return element;
 }
 const selectingSpace = createSpace("selecting-space");
@@ -57,8 +59,13 @@ observeMessage("setStatus")(({ data }) => {
     }
 });
 observeMessage("getWidgetPosition")(({ data }) => {
+    var _a;
+    if (((_a = data.params) === null || _a === void 0 ? void 0 : _a.height) === undefined)
+        return;
     attachedSpace.style.height = data.params.height;
     selectingSpace.style.height = data.params.height;
+    console.log(selectingSpace.style.height);
+    console.log(attachedSpace.style.height);
 });
 observeMessage("initPreviewHeight")(({ data }) => {
     attachedSpace.style.height = data.params;
