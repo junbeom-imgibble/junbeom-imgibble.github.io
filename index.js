@@ -9,17 +9,42 @@ function sendMaxHeight() {
     });
 }
 
+customElements.define("sw-space", class extends HTMLElement {
+    constructor() {
+        super();
+        this.isInit = false;
+    }
+    connectedCallback() {
+        if (this.isInit)
+            return;
+        this.style.width = "100%";
+        console.log("spacing");
+        this.space = document.createElement("div");
+        this.space.style.border = "1px solid red";
+        this.space.style.height = "300px";
+        this.append(this.space);
+        this.isInit = true;
+    }
+    static get observedAttributes() {
+        return ["height"];
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+        console.log(name);
+        console.log(newValue + "입니다.");
+        this.space.style.height = newValue;
+    }
+});
 function createSpace(elementName) {
-    const element = document.createElement("div");
+    const element = document.createElement("sw-space");
     element.id = elementName;
     // height 변경 인식 안되는 현상
-    element.style.height = "150px";
     element.style.width = "100vw";
-    element.style.border = "1px solid red";
     return element;
 }
 const selectingSpace = createSpace("selecting-space");
+selectingSpace.style.border = "1px solid red";
 const attachedSpace = createSpace("attached-space");
+attachedSpace.style.border = "1px solid blue";
 
 const elements = {
     tempAttachedElement: null,
@@ -58,12 +83,13 @@ observeMessage("setStatus")(({ data }) => {
         });
     }
 });
+//  변경 사항이 인식되지 않음
 observeMessage("getWidgetPosition")(({ data }) => {
     var _a;
     if (((_a = data.params) === null || _a === void 0 ? void 0 : _a.height) === undefined)
         return;
-    attachedSpace.style.height = data.params.height;
-    selectingSpace.style.height = data.params.height;
+    attachedSpace.setAttribute("height", data.params.height);
+    selectingSpace.setAttribute("height", data.params.height);
     console.log(selectingSpace.style.height);
     console.log(attachedSpace.style.height);
 });
