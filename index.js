@@ -18,9 +18,12 @@ customElements.define("sw-space", class extends HTMLElement {
         if (this.isInit)
             return;
         this.style.width = "100%";
+        this.style.height = "fit-content";
+        this.style.width = "100%";
+        this.style.display = "inline";
         console.log("spacing");
         this.space = document.createElement("div");
-        this.space.style.border = "1px solid red";
+        this.space.style.border = "1px solid purple";
         this.space.style.height = "300px";
         this.append(this.space);
         this.isInit = true;
