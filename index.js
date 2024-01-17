@@ -1,3 +1,202 @@
+// export const baseURL =
+//     (typeof window !== "undefined") && window.location.hostname === "localhost"
+//         ? "http://localhost:8080"
+//         : "https://api.shortsdev.com"
+const baseURL = "https://api.shortsdev.com";
+// export const baseURL =  "http://localhost:8080"
+// export let accessToken = (typeof window !== "undefined") && window.localStorage.getItem("sign-in-token")
+// export function setAccessToken(newAccessToken: string | null) {
+//     accessToken = newAccessToken
+// }
+
+const APIStatus = {
+    success: "success",
+    error: "error"
+};
+
+/*! js-cookie v3.0.5 | MIT */
+/* eslint-disable no-var */
+function assign(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+    for (var key in source) {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+/* eslint-enable no-var */
+
+/* eslint-disable no-var */
+var defaultConverter = {
+  read: function (value) {
+    if (value[0] === '"') {
+      value = value.slice(1, -1);
+    }
+    return value.replace(/(%[\dA-F]{2})+/gi, decodeURIComponent);
+  },
+  write: function (value) {
+    return encodeURIComponent(value).replace(/%(2[346BF]|3[AC-F]|40|5[BDE]|60|7[BCD])/g, decodeURIComponent);
+  }
+};
+/* eslint-enable no-var */
+
+/* eslint-disable no-var */
+
+function init(converter, defaultAttributes) {
+  function set(name, value, attributes) {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    attributes = assign({}, defaultAttributes, attributes);
+    if (typeof attributes.expires === 'number') {
+      attributes.expires = new Date(Date.now() + attributes.expires * 864e5);
+    }
+    if (attributes.expires) {
+      attributes.expires = attributes.expires.toUTCString();
+    }
+    name = encodeURIComponent(name).replace(/%(2[346B]|5E|60|7C)/g, decodeURIComponent).replace(/[()]/g, escape);
+    var stringifiedAttributes = '';
+    for (var attributeName in attributes) {
+      if (!attributes[attributeName]) {
+        continue;
+      }
+      stringifiedAttributes += '; ' + attributeName;
+      if (attributes[attributeName] === true) {
+        continue;
+      }
+
+      // Considers RFC 6265 section 5.2:
+      // ...
+      // 3.  If the remaining unparsed-attributes contains a %x3B (";")
+      //     character:
+      // Consume the characters of the unparsed-attributes up to,
+      // not including, the first %x3B (";") character.
+      // ...
+      stringifiedAttributes += '=' + attributes[attributeName].split(';')[0];
+    }
+    return document.cookie = name + '=' + converter.write(value, name) + stringifiedAttributes;
+  }
+  function get(name) {
+    if (typeof document === 'undefined' || arguments.length && !name) {
+      return;
+    }
+
+    // To prevent the for loop in the first place assign an empty array
+    // in case there are no cookies at all.
+    var cookies = document.cookie ? document.cookie.split('; ') : [];
+    var jar = {};
+    for (var i = 0; i < cookies.length; i++) {
+      var parts = cookies[i].split('=');
+      var value = parts.slice(1).join('=');
+      try {
+        var found = decodeURIComponent(parts[0]);
+        jar[found] = converter.read(value, found);
+        if (name === found) {
+          break;
+        }
+      } catch (e) {}
+    }
+    return name ? jar[name] : jar;
+  }
+  return Object.create({
+    set,
+    get,
+    remove: function (name, attributes) {
+      set(name, '', assign({}, attributes, {
+        expires: -1
+      }));
+    },
+    withAttributes: function (attributes) {
+      return init(this.converter, assign({}, this.attributes, attributes));
+    },
+    withConverter: function (converter) {
+      return init(assign({}, this.converter, converter), this.attributes);
+    }
+  }, {
+    attributes: {
+      value: Object.freeze(defaultAttributes)
+    },
+    converter: {
+      value: Object.freeze(converter)
+    }
+  });
+}
+var api = init(defaultConverter, {
+  path: '/'
+});
+
+// endpoint, parameter
+// export let accessToken: string | null = null
+// export const setAccessToken = (newToken: string) => accessToken = newToken
+let accessToken = api.get("sw-access-token");
+const defaultSettings = {
+    method: "GET",
+    headers: {
+    // "Access-Control-Allow-Origin": "*"
+    },
+    cache: "no-store"
+};
+class APIHelper {
+    constructor() {
+        this.endPoint = "";
+        this.settings = defaultSettings;
+    }
+    url(url) {
+        this.endPoint = url;
+        return this;
+    }
+    method(method) {
+        this.settings.method = method;
+        return this;
+    }
+    setAccessToken(newAccessToken) {
+        this.header("Authorization", "Bearer " + newAccessToken);
+        return this;
+    }
+    withAccessToken() {
+        this.header("Authorization", "Bearer " + accessToken);
+        return this;
+    }
+    header(key, value) {
+        this.settings.headers[key] = value;
+        return this;
+    }
+    body(value) {
+        this.settings.body = value;
+        return this;
+    }
+    reset() {
+        this.endPoint = "";
+        this.settings = defaultSettings;
+    }
+    withNoStore() {
+        this.settings["cache"] = "no-store";
+        return this;
+    }
+    async fetch() {
+        try {
+            const response = await fetch(baseURL + this.endPoint, this.settings);
+            return response.json();
+        }
+        catch (error) {
+            console.log(error);
+            return APIStatus.error;
+        }
+        finally {
+            this.reset();
+        }
+    }
+}
+const apiHelper = new APIHelper();
+
+async function getContentsWithAccessToken(token) {
+    const result = await apiHelper.method("GET").url("/story/?include_feed=true").setAccessToken(token).fetch();
+    return result.data;
+    // if(result?.data === null || result?.data === undefined) return  APIStatus.error
+    // return result.data
+}
+
 function uuidV4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -40,12 +239,6 @@ function getRootAttributes(element) {
   return function (name, defaultValue = null) {
     return properties[name]?.value || defaultValue;
   };
-}
-function getCanvas(element) {
-  return element.closest("sw-canvas");
-}
-function getSWIcon(element) {
-  return element.closest("sw-icon");
 }
 function getStoryStore(element) {
   return element.getRootNode().host.storyStore;
@@ -259,8 +452,6 @@ function slide(when) {
   if (this.offsetWidth > MOBILE_SIZE && this.offsetHeight > 700) {
     views.forEach(view => {
       const indexGap = Math.abs(currentIndex - getStoryStore(this).getIndexById(view.story.id)) + 1;
-      // 현재 view를 기준으로 일정 수준 감소 하는 방식으로 변경
-      // window.innerHeight
       // todo : set max height
       const scaleRate = 3 - indexGap / 8;
       view.style.transform = `scale(${scaleRate})`;
@@ -546,8 +737,6 @@ customElements.define("sw-canvas", class extends HTMLElement {
   constructor() {
     super(...arguments);
     this.videoElement = null;
-    this.isPlaying = false;
-    this.isMuted = false;
   }
   static get observedAttributes() {
     return ["current-feed-id", "refresh"];
@@ -697,37 +886,20 @@ function renderIcon(path) {
 }
 const videoIcons = {
   play: {
-    onClick: () => {
-      const currentVideoElement = getCanvas(undefined).videoElement;
-      currentVideoElement.play();
-      getSWIcon(undefined).replaceCurrentIcon("video.pause");
-    }
+    onClick: () => {}
   },
   pause: {
-    onClick: () => {
-      const currentVideoElement = getCanvas(undefined).videoElement;
-      currentVideoElement.pause();
-      getSWIcon(undefined).replaceCurrentIcon("video.pause");
-    }
+    onClick: () => {}
   },
   mute: {
-    onClick: () => {
-      const currentVideoElement = getCanvas(undefined).videoElement;
-      currentVideoElement.muted = true;
-      getSWIcon(undefined).replaceCurrentIcon("video.unmute");
-    }
+    onClick: () => {}
   },
   unmute: {
-    onClick: () => {
-      const currentVideoElement = getCanvas(undefined).videoElement;
-      currentVideoElement.muted = false;
-      getSWIcon(undefined).replaceCurrentIcon("video.mute");
-    }
+    onClick: () => {}
   }
 };
 const optionIcons = {
   like: {
-    isActive: false,
     icon: iconLibrary["heart"],
     onClick: function () {
       const likedPostingId = getFeedStore(this).currentFeed.id;
@@ -849,26 +1021,20 @@ customElements.define("sw-icon", class extends HTMLElement {
   }
   connectedCallback() {
     this.style.visibility = this.visible;
+    this.currentIcon = indexingToObject(iconElements, this.iconName);
+    this.innerHTML = renderIcon(this.currentIcon.icon);
     // 정적 사이즈 설정
     const size = this.getAttribute("size");
     this.style.width = size + "px";
     this.style.height = size + "px";
-    this.mounted();
-    // this.icon = iconElements[this.name]
-    // this.classList.add(this.icon.class)
-    // this.icon.onMount()
-    // this.addEventListener("click", this.icon.onClick)
-  }
-  mounted() {
     // 라이프 사이클
     if (this.currentIcon.onMount !== undefined) this.currentIcon.onMount.bind(this)();
     // 이벤트 핸들러 등록
     if (this.currentIcon.onClick !== undefined) this.onclick = this.currentIcon.onClick;
-  }
-  replaceCurrentIcon(iconName) {
-    this.currentIcon = indexingToObject(iconElements, this.iconName);
-    this.innerHTML = renderIcon(this.currentIcon.icon);
-    this.mounted();
+    // this.icon = iconElements[this.name]
+    // this.classList.add(this.icon.class)
+    // this.icon.onMount()
+    // this.addEventListener("click", this.icon.onClick)
   }
 });
 customElements.define("sw-interface-options", class extends HTMLElement {
@@ -893,16 +1059,10 @@ customElements.define("sw-interface-options", class extends HTMLElement {
 // todo: title element 분할
 // video player 관련 icon 추가
 customElements.define("sw-interface-header", class extends HTMLElement {
-  constructor() {
-    super(...arguments);
-    this.currentVideoElement = getCanvas(this).videoElement;
-  }
   connectedCallback() {
     this.innerHTML = `
             <div class="interface-title">Title1</div>
 <!--            <sw-icon icon="elipsis"></sw-icon>-->
-            <sw-icon icon="video.mute"></sw-icon>
-            <sw-icon icon="video.play"></sw-icon>
             <sw-icon icon=router.close style="position: absolute; right: 0;"></sw-icon>
         `;
     window.addEventListener("resize", () => {
@@ -937,33 +1097,20 @@ customElements.define("sw-interface", class extends HTMLElement {
         `;
   }
 });
-function checkPostingsIndex(element) {
-  const storyId = this.getAttribute("story-id");
-  const storyIdIndex = this.storyStore.getIndexById(storyId);
-  const isFirstIndex = storyIdIndex === 0;
-  const isLastIndex = storyIdIndex === this.storyStore.stories.length - 1;
-  return [isFirstIndex, isLastIndex];
-}
 customElements.define("sw-controller", class extends HTMLElement {
   constructor() {
     super(...arguments);
     this.storyStore = getStoryStore(this);
   }
-  render({
-    isFirstIndex,
-    isLastIndex
-  }) {
+  connectedCallback() {
+    const storyId = this.getAttribute("story-id");
+    const storyIdIndex = this.storyStore.getIndexById(storyId);
+    const isFirstIndex = storyIdIndex === 0;
+    const isLastIndex = storyIdIndex === this.storyStore.stories.length - 1;
     this.innerHTML = `
             <sw-icon icon="router.arrow.left" size="32" visible=${isFirstIndex}></sw-icon>
             <sw-icon icon="router.arrow.right" size="32" visible=${isLastIndex}></sw-icon>
         `;
-  }
-  postingChangedCallback() {
-    const [isFirstIndex, isLastIndex] = checkPostingsIndex();
-    this.render({
-      isFirstIndex,
-      isLastIndex
-    });
   }
 });
 customElements.define("sw-view", class extends HTMLElement {
@@ -1114,7 +1261,7 @@ customElements.define("sw-skeleton", class extends HTMLElement {
     this.innerHTML = skeletons[shape](size, this.properties["border-start-color"], this.properties["border-end-color"]).repeat(repeatCount);
   }
 });
-var styles = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scrollbar-width: none;\n    -webkit-user-drag: none;\n    font-size: 14px;\n}\n\n*::-webkit-scrollbar {\n    display: none;\n}\n\nsw-canvas {\n    position: absolute;\n    top: 0;\n    left: 0;\n    height: 100%;\n    width: 100%;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n\n\n    box-sizing: border-box;\n    /*border: 1px solid red;*/\n}\n\nsw-element {\n    position: absolute;\n    overflow: hidden;\n}\n\n.content {\n    position: relative;\n    width: 100%;\n    height: 100%;\n    object-fit: fill;\n}\n\n.video-content {\n    object-fit: contain;\n}\n\n.scene {\n    position: relative;\n    width: 100%;\n    height: 100%;\n}\n\n/* default 스타일 적용된 점 확인 필요 */\n\n.sw-text-element {\n    opacity: 80%;\n    /*padding-block: 12px;*/\n    padding-inline: 4px;\n    border-radius: 4px;\n}\n\nsw-controller {\n    position: absolute;\n    width: 144%;\n    height: 0;\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    align-items: center;\n\n    @container slider (max-width: 768px) {\n        visibility: hidden\n    }\n}\n\n.interface {\n    position: absolute;\n\n    display: flex;\n    flex-direction: column;\n\n    padding-inline: 4%;\n    padding-block: 8%;\n    box-sizing: border-box;\n\n    width: 100%;\n    height: 100%;\n\n}\n\nsw-interface-header {\n    top: 2%;\n    position: relative;\n    display: flex;\n}\n\nsw-interface-options {\n    margin-top: auto;\n    position: relative;\n    bottom: 4%;\n    display: flex;\n    align-self: flex-end;\n    justify-content: flex-end;\n    flex-direction: column;\n    gap: 4%;\n    height: 100%;\n}\n\n.interface-title {\n    position: relative;\n    color: white;\n    font-weight: 700;\n    font-size: 12px;\n    left: 1%;\n\n    @media (max-width: 500px) {\n            font-size: 24px;\n    }\n}\n\n.timeline {\n    width: 100%;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 2px;\n    box-sizing: border-box;\n    padding-inline: 2px;\n    position: relative;\n}\n\nsw-progress {\n    border-radius: 1px;\n    height: 2px;\n    width: 100%;\n    background-color: rgba(255, 255, 255, 0.48);\n    overflow: hidden;\n}\n\n.gauge {\n    border-radius: 1px;\n    height: 100%;\n    width: 0;\n    background-color: #FFFFFF;\n}\n\n.view {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-shrink: 0;\n\n    position: relative;\n    width: 100%;\n\n    /*border-radius: 6px;*/\n\n    cursor: pointer;\n    transition: transform 0.4s;\n}\n\n.view-inner {\n\n    position: relative;\n\n    aspect-ratio: 9/16;\n    border-radius: 6px;\n\n    height: 100%;\n    width: auto;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n\n    background-color: #000000;\n\n    box-sizing: border-box;\n    border: 1px solid #828282;\n\n\n    @media (max-width: 768px), (max-height: 500px) {\n        border-radius: 0;\n        border: none;\n    }\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n\n    background-color: black;\n}\n\nsw-view-group {\n    /* position */\n    position: relative;\n    left: 0;\n\n    /* layout */\n    display: flex;\n    flex-direction: row;\n    gap: 220px;\n\n    /* size */\n    width: auto;\n    height: 100vh;\n\n    aspect-ratio: 9/16;\n\n    @media (max-width: 768px), (max-height: 500px) {\n            width: 100%;\n            height: 100%;\n            gap: 0;\n    }\n}\n\nsw-layer {\n    position: fixed;\n    height: -webkit-fill-available;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    sw-layer {\n        background-color: #000000;\n    }\n}\n\n/*@supports (-webkit-touch-callout: none) {*/\n\n/*    height: -webkit-fill-available;*/\n\n/*}*/\n\nsw-slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    box-sizing: border-box;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}\n\nsw-story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n    flex-shrink: 0;\n\n}\n\n.story-icon {    \n    position: relative;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\n.story-label {\n    /*position*/\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}\n\nsw-shorts {\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n    flex-shrink: 0;\n}\n\nsw-shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\nsw-shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}\n\nsw-embed {\n    position: relative;\n    width: 400px;\n    aspect-ratio: 9/16;\n}\n\nsw-embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n    border-radius: 4px;\n}\n\nsw-ui, sw-skeleton {\n    display: flex;\n    flex-direction: row;\n    gap: 12px;\n    overflow: scroll;\n    width: 100%;\n}\n\n.skeleton-story {\n    flex-shrink: 0;\n    position: relative;\n    border-radius: 50%;\n\n    aspect-ratio: 1/1;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n}\n\n.skeleton-border {\n    width: 93%;\n    height:  93%;\n    background-color: #FFFFFF;\n    border-radius: 50%;\n\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.skeleton-image {\n    width: 94%;\n    height: 94%;\n    border-radius: 50%;\n\n    background-color: #3232393D;\n    overflow: hidden;\n\n}\n\n.skeleton-shorts {\n    background-color: rgba(50, 50, 57, 0.24);\n    aspect-ratio: 9/16;\n    border-radius: 8px;\n    flex-shrink: 0;\n}\n\nsw-icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 999;\n    color: rgba(255, 255, 255, 0.48);\n    position: relative;\n    height: 16px;\n    width: 16px;\n}\n\n@media (max-width: 768px) {\n    sw-icon {\n        height: 32px;\n        width: 32px;\n    }\n}\n\nsw-icon:hover {\n    color: white\n}\n\n.icon-container {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    justify-content: end;\n    gap: 4px;\n}\n\n.outer-close {\n    position: absolute;\n    top: 0;\n    right: 0;\n    height: 32px;\n    width: 32px;\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    .outer-close {\n        display: none;\n    }\n}\n\n.arrow {\n    position: relative;\n    height: 32px;\n    width: 32px;\n}\n\n.heart {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.share {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.router-back {\n    position: absolute;\n    right: 1%;\n    top: 1%;\n    height: 32px;\n    width: 32px;\n\n    @media (max-width: 768px), (max-height: 500px) {\n        display: none;\n    }\n}\n";
+var styles = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scrollbar-width: none;\n    -webkit-user-drag: none;\n    font-size: 14px;\n}\n\n*::-webkit-scrollbar {\n    display: none;\n}\n\nsw-canvas {\n    position: absolute;\n    top: 0;\n    left: 0;\n    height: 100%;\n    width: 100%;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n\n\n    box-sizing: border-box;\n    /*border: 1px solid red;*/\n}\n\nsw-element {\n    position: absolute;\n    overflow: hidden;\n}\n\n.content {\n    position: relative;\n    width: 100%;\n    height: 100%;\n    object-fit: fill;\n}\n\n.video-content {\n    object-fit: contain;\n}\n\n.scene {\n    position: relative;\n    width: 100%;\n    height: 100%;\n}\n\n/* default 스타일 적용된 점 확인 필요 */\n\n.sw-text-element {\n    opacity: 80%;\n    /*padding-block: 12px;*/\n    padding-inline: 4px;\n    border-radius: 4px;\n}\n\nsw-controller {\n    position: absolute;\n    width: 144%;\n    height: 0;\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    align-items: center;\n\n    @container slider (max-width: 768px) {\n        visibility: hidden\n    }\n}\n\n.interface {\n    position: absolute;\n\n    display: flex;\n    flex-direction: column;\n\n    padding-inline: 4%;\n    padding-block: 8%;\n    box-sizing: border-box;\n\n    width: 100%;\n    height: 100%;\n\n}\n\nsw-interface-header {\n    top: 2%;\n    position: relative;\n    display: flex;\n}\n\nsw-interface-options {\n    margin-top: auto;\n    position: relative;\n    bottom: 4%;\n    display: flex;\n    align-self: flex-end;\n    justify-content: flex-end;\n    flex-direction: column;\n    gap: 4%;\n    height: 100%;\n}\n\n.interface-title {\n    position: relative;\n    color: white;\n    font-weight: 700;\n    font-size: 12px;\n    left: 1%;\n\n    @media (max-width: 500px) {\n            font-size: 24px;\n    }\n}\n\n.timeline {\n    width: 100%;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 2px;\n    box-sizing: border-box;\n    padding-inline: 2px;\n    position: relative;\n}\n\nsw-progress {\n    border-radius: 1px;\n    height: 2px;\n    width: 100%;\n    background-color: rgba(255, 255, 255, 0.48);\n    overflow: hidden;\n}\n\n.gauge {\n    border-radius: 1px;\n    height: 100%;\n    width: 0;\n    background-color: #FFFFFF;\n}\n\n.view {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-shrink: 0;\n\n    position: relative;\n    width: 100%;\n\n    /*border-radius: 6px;*/\n\n    cursor: pointer;\n    transition: transform 0.4s;\n}\n\n.view-inner {\n\n    position: relative;\n\n    aspect-ratio: 9/16;\n    border-radius: 6px;\n\n    height: 100%;\n    width: auto;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n\n    background-color: #000000;\n\n    box-sizing: border-box;\n    border: 1px solid #828282;\n\n\n    @media (max-width: 768px), (max-height: 500px) {\n        border-radius: 0;\n        border: none;\n    }\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n\n    background-color: black;\n}\n\nsw-view-group {\n    /* position */\n    position: relative;\n    left: 0;\n\n    /* layout */\n    display: flex;\n    flex-direction: row;\n    gap: 220px;\n\n    /* size */\n    width: 260px;\n    height: auto;\n\n    aspect-ratio: 9/16;\n\n    @media (max-width: 768px), (max-height: 500px) {\n            width: 100%;\n            height: 100%;\n            gap: 0;\n    }\n}\n\nsw-layer {\n    position: fixed;\n    height: -webkit-fill-available;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    sw-layer {\n        background-color: #000000;\n    }\n}\n\n/*@supports (-webkit-touch-callout: none) {*/\n\n/*    height: -webkit-fill-available;*/\n\n/*}*/\n\nsw-slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    box-sizing: border-box;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}\n\nsw-story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n    flex-shrink: 0;\n\n}\n\n.story-icon {    \n    position: relative;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\n.story-label {\n    /*position*/\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}\n\nsw-shorts {\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n    flex-shrink: 0;\n}\n\nsw-shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\nsw-shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}\n\nsw-embed {\n    position: relative;\n    width: 400px;\n    aspect-ratio: 9/16;\n}\n\nsw-embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n    border-radius: 4px;\n}\n\nsw-ui, sw-skeleton {\n    display: flex;\n    flex-direction: row;\n    gap: 12px;\n    overflow: scroll;\n    width: 100%;\n}\n\n.skeleton-story {\n    flex-shrink: 0;\n    position: relative;\n    border-radius: 50%;\n\n    aspect-ratio: 1/1;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n}\n\n.skeleton-border {\n    width: 93%;\n    height:  93%;\n    background-color: #FFFFFF;\n    border-radius: 50%;\n\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.skeleton-image {\n    width: 94%;\n    height: 94%;\n    border-radius: 50%;\n\n    background-color: #3232393D;\n    overflow: hidden;\n\n}\n\n.skeleton-shorts {\n    background-color: rgba(50, 50, 57, 0.24);\n    aspect-ratio: 9/16;\n    border-radius: 8px;\n}\n\nsw-icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 999;\n    color: rgba(255, 255, 255, 0.48);\n    position: relative;\n    height: 16px;\n    width: 16px;\n}\n\n@media (max-width: 768px) {\n    sw-icon {\n        height: 32px;\n        width: 32px;\n    }\n}\n\nsw-icon:hover {\n    color: white\n}\n\n.icon-container {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    justify-content: end;\n    gap: 4px;\n}\n\n.outer-close {\n    position: absolute;\n    top: 0;\n    right: 0;\n    height: 32px;\n    width: 32px;\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    .outer-close {\n        display: none;\n    }\n}\n\n.arrow {\n    position: relative;\n    height: 32px;\n    width: 32px;\n}\n\n.heart {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.share {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.router-back {\n    position: absolute;\n    right: 1%;\n    top: 1%;\n    height: 32px;\n    width: 32px;\n\n    @media (max-width: 768px), (max-height: 500px) {\n        display: none;\n    }\n}\n";
 class Shortsworks extends HTMLElement {
   constructor() {
     super(...arguments);
@@ -1143,20 +1290,11 @@ class Shortsworks extends HTMLElement {
     const styleSheet = document.createElement("style");
     styleSheet.textContent = styles;
     this.document.appendChild(styleSheet);
-    this.render();
-    if (this.getAttribute("settings") === null) return;
-    const settings = JSON.parse(this.getAttribute("settings"));
-    // 묶어서 적용
-    this.setAttribute("shape", settings.widgetShape);
-    this.setAttribute("border-start-color", settings.widgetStartColor);
-    this.setAttribute("border-end-color", settings.widgetEndColor);
-    this.setAttribute("size", settings.widgetSize);
-    this.render();
     // fetch data
-    // if(this.getAttribute("key") === null) return
-    // let data = await getContentsWithAccessToken(this.getAttribute("key"))
-    // this.setData(data)
-    // this.render()
+    if (this.getAttribute("key") === null) return;
+    const data = await getContentsWithAccessToken(this.getAttribute("key"));
+    this.setData(data);
+    this.render();
   }
   render() {
     const visible = this.getAttribute("visible");
