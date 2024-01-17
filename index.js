@@ -191,7 +191,7 @@ class APIHelper {
 const apiHelper = new APIHelper();
 
 async function getContentsWithAccessToken(token) {
-    const result = await apiHelper.method("GET").url("/story/?include_feed=true").setAccessToken(token).fetch();
+    const result = await apiHelper.method("GET").url("/story/?draft=true&include_feed=true").setAccessToken(token).fetch();
     return result.data;
     // if(result?.data === null || result?.data === undefined) return  APIStatus.error
     // return result.data
@@ -240,6 +240,12 @@ function getRootAttributes(element) {
     return properties[name]?.value || defaultValue;
   };
 }
+function getCanvasFromView(element) {
+  return element.closest("sw-view").querySelector("sw-canvas");
+}
+function getSWIcon(element) {
+  return element.closest("sw-icon");
+}
 function getStoryStore(element) {
   return element.getRootNode().host.storyStore;
 }
@@ -260,7 +266,7 @@ const checkPostingTime = function (time) {
 };
 
 // timer 가 단일인 상황, 추후 여러 개로 늘릴 수 있음.
-// 단일 시간이 공통 으로 묶인 문제 발생
+// 단일 시간이 공통 으로 묶인 문제 발생, 싱글톤 아닌 형태로 변경
 class Progress {
   constructor() {
     this.currentTime = 0;
@@ -452,8 +458,10 @@ function slide(when) {
   if (this.offsetWidth > MOBILE_SIZE && this.offsetHeight > 700) {
     views.forEach(view => {
       const indexGap = Math.abs(currentIndex - getStoryStore(this).getIndexById(view.story.id)) + 1;
+      // 현재 view를 기준으로 일정 수준 감소 하는 방식으로 변경
+      // window.innerHeight
       // todo : set max height
-      const scaleRate = 3 - indexGap / 8;
+      const scaleRate = 1 - indexGap / 8;
       view.style.transform = `scale(${scaleRate})`;
     });
   }
@@ -468,6 +476,12 @@ function getAttributes(element) {
 }
 function percentage(number) {
   return Number(number) * 100;
+}
+function toUndersoreFromSpacing(text) {
+  return text.replace(/ /g, "_");
+}
+function toSpacingFromUndersore(text) {
+  return text.replace(/_/g, " ");
 }
 class StoryStore {
   constructor(element) {
@@ -486,7 +500,7 @@ class StoryStore {
       // (this.DOM.querySelector("sw-slider") as SlideElement).
       slide.call(this.document.querySelector("sw-slider"), "selected");
       // 로직 분리 필요
-      // mute 아닌 pause 로 변경 필요 ( 컨텐츠를 못찾는 경우 에러 발생
+      // mute 아닌 pause 로 변경 필요 ( 컨텐츠를 못찾는 경우 에러 발생)
       this.document.querySelectorAll(".content").forEach(videoContent => videoContent.muted = true);
       this.document.querySelectorAll("sw-view").forEach(element => element.story.id === this.currentStory.id ? element.feedStore.active(true) : element.feedStore.active(false));
     };
@@ -645,7 +659,7 @@ class TextElement extends Element {
   render() {
     // 폰트 정보가 className 과 일치 하지 않은 관련 처리 필요
     this.style.fontFamily = convertFont(this.font);
-    this.element.textContent = this.text;
+    this.element.textContent = toSpacingFromUndersore(this.text);
   }
 }
 function convertFont(name) {
@@ -726,7 +740,7 @@ function createScene(content, elements) {
           fontFamily
         }
       } = element;
-      return `<sw-element element-type="TEXT" file-type="TEXT" source=${content} left=${positionX} top=${positionY} rotate=${rotationAngle} scale=${size} color=${color} background-color=${backgroundColor} font=${fontFamily}></sw-element>`;
+      return `<sw-element element-type="TEXT" file-type="TEXT" source=${toUndersoreFromSpacing(content)} left=${positionX} top=${positionY} rotate=${rotationAngle} scale=${size} color=${color} background-color=${backgroundColor} font=${fontFamily}></sw-element>`;
     }
   }).join("");
   return scene;
@@ -737,6 +751,9 @@ customElements.define("sw-canvas", class extends HTMLElement {
   constructor() {
     super(...arguments);
     this.videoElement = null;
+    // video status
+    this.isPlaying = false;
+    this.isMuted = false;
   }
   static get observedAttributes() {
     return ["current-feed-id", "refresh"];
@@ -872,10 +889,10 @@ const iconLibrary = {
   share: `<path d="M21 6.28571C21 8.65179 19.0804 10.5714 16.7143 10.5714C15.4196 10.5714 14.2589 10.0357 13.4554 9.09821L9.4375 11.1071C9.52679 11.4196 9.52679 11.7321 9.52679 12C9.52679 12.3125 9.52679 12.625 9.4375 12.9375L13.4554 14.9018C14.2589 14.0089 15.4196 13.4286 16.7143 13.4286C19.0804 13.4286 21 15.3482 21 17.7143C21 20.0804 19.0804 22 16.7143 22C14.3036 22 12.4286 20.0804 12.4286 17.7143C12.4286 17.4464 12.4286 17.1339 12.5179 16.8214L8.5 14.8125C7.69643 15.75 6.53571 16.2857 5.28571 16.2857C2.875 16.2857 1 14.3661 1 12C1 9.63393 2.875 7.71429 5.28571 7.71429C6.53571 7.71429 7.69643 8.29464 8.5 9.1875L12.5179 7.22321C12.4286 6.91071 12.4286 6.59821 12.4286 6.28571C12.4286 3.91964 14.3036 2 16.7143 2C19.0804 2 21 3.91964 21 6.28571ZM5.24107 14.1429C6.44643 14.1429 7.38393 13.2054 7.38393 12C7.38393 10.8393 6.44643 9.85714 5.24107 9.85714C4.08036 9.85714 3.09821 10.8393 3.09821 12C3.09821 13.2054 4.08036 14.1429 5.24107 14.1429ZM16.7143 4.14286C15.5089 4.14286 14.5714 5.125 14.5714 6.28571C14.5714 7.49107 15.5089 8.42857 16.7143 8.42857C17.875 8.42857 18.8571 7.49107 18.8571 6.28571C18.8571 5.125 17.875 4.14286 16.7143 4.14286ZM16.7143 19.8571C17.875 19.8571 18.8571 18.9196 18.8571 17.7143C18.8571 16.5536 17.875 15.5714 16.7143 15.5714C15.5089 15.5714 14.5714 16.5536 14.5714 17.7143C14.5714 18.9196 15.5089 19.8571 16.7143 19.8571Z"/>`,
   ellipsis: `<path d="M12.458 18.2814C13.5583 18.2814 14.4893 19.2124 14.4893 20.3127C14.4893 21.4552 13.5583 22.3439 12.458 22.3439C11.3154 22.3439 10.4268 21.4552 10.4268 20.3127C10.4268 19.2124 11.3154 18.2814 12.458 18.2814ZM12.458 11.5106C13.5583 11.5106 14.4893 12.4416 14.4893 13.5418C14.4893 14.6844 13.5583 15.5731 12.458 15.5731C11.3154 15.5731 10.4268 14.6844 10.4268 13.5418C10.4268 12.4416 11.3154 11.5106 12.458 11.5106ZM12.458 8.80225C11.3154 8.80225 10.4268 7.91357 10.4268 6.771C10.4268 5.67074 11.3154 4.73975 12.458 4.73975C13.5583 4.73975 14.4893 5.67074 14.4893 6.771C14.4893 7.91357 13.5583 8.80225 12.458 8.80225Z"/>`,
   back: `<path d="M23.8337 12.9776C23.8337 13.6091 23.3627 14.1053 22.8061 14.1053H5.72076L11.4154 19.789C11.8435 20.1949 11.8435 20.9167 11.4582 21.3227C11.0728 21.7737 10.4306 21.7737 10.0024 21.3678L2.46671 13.7896C2.25263 13.564 2.16699 13.2934 2.16699 12.9776C2.16699 12.707 2.25263 12.4363 2.46671 12.2108L10.0024 4.63256C10.4306 4.22659 11.0728 4.22659 11.4582 4.67767C11.8435 5.08365 11.8435 5.80538 11.4154 6.21135L5.72076 11.895H22.8061C23.4055 11.895 23.8337 12.3912 23.8337 12.9776Z"/>`,
-  play: "",
-  pause: "",
-  unMute: "<path d=\"M13.1728 3.12054C13.6176 3.32143 13.9412 3.80357 13.9412 4.28571V19.7143C13.9412 20.2366 13.6176 20.6786 13.1728 20.9196C12.9706 21 12.8088 21 12.6471 21C12.3235 21 12 20.9196 11.7574 20.5982L6.29779 15.7768H2.94118C1.84926 15.7768 1 14.933 1 13.8884V10.0714C1 9.02679 1.84926 8.14286 2.94118 8.14286H6.29779L11.7574 3.36161C12 3.12054 12.3235 3 12.6471 3C12.8088 3 12.9706 3.04018 13.1728 3.12054ZM12 18.308V5.73214L7.06618 10.1116H2.94118V13.9286H7.06618L12 18.308ZM17.6618 9.02679C18.5919 9.79018 19.1176 10.875 19.1176 12C19.1176 13.1652 18.5919 14.25 17.6618 15.0134C17.5 15.1339 17.2574 15.2143 17.0551 15.2143C16.7721 15.2143 16.489 15.0938 16.2868 14.8527C15.9632 14.4509 16.0037 13.8482 16.4485 13.4866C16.8934 13.125 17.1765 12.6027 17.1765 12C17.1765 11.4375 16.8934 10.9152 16.4485 10.5536C16.0037 10.192 15.9632 9.58929 16.2868 9.1875C16.489 8.94643 16.7721 8.82589 17.0551 8.82589C17.2574 8.82589 17.5 8.90625 17.6618 9.02679ZM20.1287 6.05357C21.9485 7.54018 23 9.70982 23 12C23 14.3304 21.9485 16.5 20.1287 17.9866C19.9265 18.1071 19.7243 18.1875 19.4816 18.1875C19.1985 18.1875 18.9559 18.067 18.7537 17.8259C18.3897 17.4241 18.4706 16.8214 18.875 16.4598C20.25 15.375 21.0588 13.7277 21.0588 12C21.0588 10.3125 20.25 8.66518 18.875 7.58036C18.4706 7.21875 18.3897 6.61607 18.7537 6.21429C18.9559 5.97321 19.1985 5.85268 19.4816 5.85268C19.7243 5.85268 19.9265 5.93304 20.1287 6.05357Z\"/>",
-  mute: "<path d=\"M22.6527 16.5225C23.0478 16.8039 23.1197 17.3316 22.7964 17.6834C22.6168 17.8945 22.3654 18 22.114 18C21.9344 18 21.7548 17.9648 21.5752 17.7889L0.347259 1.50102C-0.0478467 1.21958 -0.119684 0.691899 0.203584 0.340108C0.490933 -0.0468615 1.02971 -0.11722 1.3889 0.199392L7.71058 5.0541L11.8771 1.43066C12.0927 1.21958 12.38 1.11405 12.6674 1.11405C12.811 1.11405 12.9547 1.14923 13.1343 1.21958C13.5294 1.39548 13.8168 1.81763 13.8168 2.23978V9.69774L15.7564 11.2104C15.6486 10.8938 15.7564 10.542 16.0437 10.2958C16.4388 9.97917 16.6902 9.52184 16.6902 8.99416C16.6902 8.50165 16.4388 8.04432 16.0437 7.72771C15.6486 7.4111 15.6127 6.88342 15.9 6.53162C16.0796 6.32055 16.3311 6.21501 16.5825 6.21501C16.7621 6.21501 16.9776 6.28537 17.1213 6.39091C17.9474 7.05931 18.4143 8.00914 18.4143 8.99416C18.4143 10.0144 17.9474 10.9642 17.1213 11.6326C16.9776 11.7381 16.7621 11.8085 16.5825 11.8085C16.5466 11.8085 16.5466 11.8085 16.5107 11.8085L18.127 13.0046C18.1629 12.9694 18.1629 12.9342 18.1988 12.899C19.4201 11.9492 20.1384 10.5069 20.1384 8.99416C20.1384 7.51664 19.4201 6.0743 18.1988 5.15964C17.8396 4.84303 17.7678 4.31534 18.0911 3.96355C18.2707 3.75248 18.4862 3.64694 18.7376 3.64694C18.9531 3.64694 19.1327 3.7173 19.3123 3.82284C20.9286 5.08928 21.8625 6.98895 21.8625 8.99416C21.8625 10.929 20.9646 12.7583 19.4919 14.0599L22.6527 16.5225ZM12.0927 8.36094V3.50622L9.11141 6.10948L12.0927 8.36094ZM12.0927 14.5173V12.688L13.8168 13.9896V15.7485C13.8168 16.2059 13.5294 16.5928 13.1343 16.8039C12.9547 16.8743 12.811 16.8743 12.6674 16.8743C12.38 16.8743 12.0927 16.8039 11.8771 16.5577L7.02813 12.3713H4.04688C3.07708 12.3713 2.32278 11.6326 2.32278 10.6828V7.30556C2.32278 6.67234 2.68197 6.14465 3.18483 5.86322L5.12444 7.34074H4.04688V10.6828H7.71058L12.0927 14.5173Z\"/>"
+  play: `<path d="M19.1196 10.1549C19.7448 10.5568 20.1467 11.2712 20.1467 11.9857C20.1467 12.7448 19.7448 13.4592 19.1196 13.8165L6.25965 21.6753C5.58986 22.0772 4.74146 22.1219 4.07167 21.72C3.40187 21.3628 3 20.6483 3 19.8446V4.12681C3 3.36771 3.40187 2.65327 4.07167 2.29604C4.74146 1.89417 5.58986 1.89417 6.25965 2.3407L19.1196 10.1549Z"/>`,
+  pause: `<path d="M4.07167 2.29604C4.74146 1.89417 5.58986 1.89417 6.25965 2.3407L19.1196 10.1549C19.7448 10.5568 20.1467 11.2712 20.1467 11.9857C20.1467 12.7448 19.7448 13.4592 19.1196 13.8165L6.25965 21.6753C5.58986 22.0772 4.74146 22.1219 4.07167 21.72C3.40187 21.3628 3 20.6483 3 19.8446V4.12681C3 3.36771 3.40187 2.65327 4.07167 2.29604ZM5.14333 19.8446L18.0033 11.9857L5.14333 4.12681V19.8446Z"/>`,
+  mute: `<path d="M23.6527 19.5225C24.0478 19.8039 24.1197 20.3316 23.7964 20.6834C23.6168 20.8945 23.3654 21 23.114 21C22.9344 21 22.7548 20.9648 22.5752 20.7889L1.34726 4.50102C0.952153 4.21958 0.880316 3.6919 1.20358 3.34011C1.49093 2.95314 2.02971 2.88278 2.3889 3.19939L8.71058 8.0541L12.8771 4.43066C13.0927 4.21958 13.38 4.11405 13.6674 4.11405C13.811 4.11405 13.9547 4.14923 14.1343 4.21958C14.5294 4.39548 14.8168 4.81763 14.8168 5.23978V12.6977L16.7564 14.2104C16.6486 13.8938 16.7564 13.542 17.0437 13.2958C17.4388 12.9792 17.6902 12.5218 17.6902 11.9942C17.6902 11.5017 17.4388 11.0443 17.0437 10.7277C16.6486 10.4111 16.6127 9.88342 16.9 9.53162C17.0796 9.32055 17.3311 9.21501 17.5825 9.21501C17.7621 9.21501 17.9776 9.28537 18.1213 9.39091C18.9474 10.0593 19.4143 11.0091 19.4143 11.9942C19.4143 13.0144 18.9474 13.9642 18.1213 14.6326C17.9776 14.7381 17.7621 14.8085 17.5825 14.8085C17.5466 14.8085 17.5466 14.8085 17.5107 14.8085L19.127 16.0046C19.1629 15.9694 19.1629 15.9342 19.1988 15.899C20.4201 14.9492 21.1384 13.5069 21.1384 11.9942C21.1384 10.5166 20.4201 9.0743 19.1988 8.15964C18.8396 7.84303 18.7678 7.31534 19.0911 6.96355C19.2707 6.75248 19.4862 6.64694 19.7376 6.64694C19.9531 6.64694 20.1327 6.7173 20.3123 6.82284C21.9286 8.08928 22.8625 9.98895 22.8625 11.9942C22.8625 13.929 21.9646 15.7583 20.4919 17.0599L23.6527 19.5225ZM13.0927 11.3609V6.50622L10.1114 9.10948L13.0927 11.3609ZM13.0927 17.5173V15.688L14.8168 16.9896V18.7485C14.8168 19.2059 14.5294 19.5928 14.1343 19.8039C13.9547 19.8743 13.811 19.8743 13.6674 19.8743C13.38 19.8743 13.0927 19.8039 12.8771 19.5577L8.02813 15.3713H5.04688C4.07708 15.3713 3.32278 14.6326 3.32278 13.6828V10.3056C3.32278 9.67234 3.68197 9.14465 4.18483 8.86322L6.12444 10.3407H5.04688V13.6828H8.71058L13.0927 17.5173Z"/>`,
+  unMute: `<path d="M13.1728 3.12054C13.6176 3.32143 13.9412 3.80357 13.9412 4.28571V19.7143C13.9412 20.2366 13.6176 20.6786 13.1728 20.9196C12.9706 21 12.8088 21 12.6471 21C12.3235 21 12 20.9196 11.7574 20.5982L6.29779 15.7768H2.94118C1.84926 15.7768 1 14.933 1 13.8884V10.0714C1 9.02679 1.84926 8.14286 2.94118 8.14286H6.29779L11.7574 3.36161C12 3.12054 12.3235 3 12.6471 3C12.8088 3 12.9706 3.04018 13.1728 3.12054ZM12 18.308V5.73214L7.06618 10.1116H2.94118V13.9286H7.06618L12 18.308ZM17.6618 9.02679C18.5919 9.79018 19.1176 10.875 19.1176 12C19.1176 13.1652 18.5919 14.25 17.6618 15.0134C17.5 15.1339 17.2574 15.2143 17.0551 15.2143C16.7721 15.2143 16.489 15.0938 16.2868 14.8527C15.9632 14.4509 16.0037 13.8482 16.4485 13.4866C16.8934 13.125 17.1765 12.6027 17.1765 12C17.1765 11.4375 16.8934 10.9152 16.4485 10.5536C16.0037 10.192 15.9632 9.58929 16.2868 9.1875C16.489 8.94643 16.7721 8.82589 17.0551 8.82589C17.2574 8.82589 17.5 8.90625 17.6618 9.02679ZM20.1287 6.05357C21.9485 7.54018 23 9.70982 23 12C23 14.3304 21.9485 16.5 20.1287 17.9866C19.9265 18.1071 19.7243 18.1875 19.4816 18.1875C19.1985 18.1875 18.9559 18.067 18.7537 17.8259C18.3897 17.4241 18.4706 16.8214 18.875 16.4598C20.25 15.375 21.0588 13.7277 21.0588 12C21.0588 10.3125 20.25 8.66518 18.875 7.58036C18.4706 7.21875 18.3897 6.61607 18.7537 6.21429C18.9559 5.97321 19.1985 5.85268 19.4816 5.85268C19.7243 5.85268 19.9265 5.93304 20.1287 6.05357Z"/>`
 };
 function renderIcon(path) {
   return `
@@ -886,20 +903,43 @@ function renderIcon(path) {
 }
 const videoIcons = {
   play: {
-    onClick: () => {}
+    icon: iconLibrary["play"],
+    onClick: function () {
+      const currentVideo = getCanvasFromView(this).querySelector("video");
+      currentVideo.pause();
+      Progress$1.pause();
+      this.replaceCurrentIcon("video.pause");
+    }
   },
   pause: {
-    onClick: () => {}
+    icon: iconLibrary["pause"],
+    onClick: function () {
+      const currentVideo = getCanvasFromView(this).querySelector("video");
+      currentVideo.play();
+      Progress$1.play();
+      getSWIcon(this).replaceCurrentIcon("video.play");
+    }
   },
   mute: {
-    onClick: () => {}
+    icon: iconLibrary["unMute"],
+    onClick: function () {
+      const currentVideo = getCanvasFromView(this).querySelector("video");
+      currentVideo.setAttribute("muted", "true");
+      getSWIcon(this).replaceCurrentIcon("video.unmute");
+    }
   },
   unmute: {
-    onClick: () => {}
+    icon: iconLibrary["mute"],
+    onClick: function () {
+      const currentVideo = getCanvasFromView(this).querySelector("video");
+      currentVideo.removeAttribute("muted");
+      getSWIcon(this).replaceCurrentIcon("video.mute");
+    }
   }
 };
 const optionIcons = {
   like: {
+    isActive: false,
     icon: iconLibrary["heart"],
     onClick: function () {
       const likedPostingId = getFeedStore(this).currentFeed.id;
@@ -1020,28 +1060,30 @@ customElements.define("sw-icon", class extends HTMLElement {
     this.visible = this.getAttribute("visible");
   }
   connectedCallback() {
-    this.style.visibility = this.visible;
-    this.currentIcon = indexingToObject(iconElements, this.iconName);
-    this.innerHTML = renderIcon(this.currentIcon.icon);
+    if (this.visible !== null) this.style.visibility = this.visible === "true" ? "visible" : "hidden";
     // 정적 사이즈 설정
     const size = this.getAttribute("size");
     this.style.width = size + "px";
     this.style.height = size + "px";
+    this.replaceCurrentIcon(this.iconName);
+  }
+  mounted() {
     // 라이프 사이클
-    if (this.currentIcon.onMount !== undefined) this.currentIcon.onMount.bind(this)();
+    if (this.currentIcon?.onMount !== undefined) this.currentIcon.onMount.bind(this)();
     // 이벤트 핸들러 등록
-    if (this.currentIcon.onClick !== undefined) this.onclick = this.currentIcon.onClick;
-    // this.icon = iconElements[this.name]
-    // this.classList.add(this.icon.class)
-    // this.icon.onMount()
-    // this.addEventListener("click", this.icon.onClick)
+    if (this.currentIcon?.onClick !== undefined) this.onclick = this.currentIcon.onClick;
+  }
+  replaceCurrentIcon(iconName) {
+    this.currentIcon = indexingToObject(iconElements, iconName);
+    this.innerHTML = renderIcon(this.currentIcon.icon);
+    this.mounted();
   }
 });
 customElements.define("sw-interface-options", class extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
-            <sw-icon icon="option.like" class="heart"></sw-icon>
-            <sw-icon icon="option.share" class="heart"></sw-icon>
+            <sw-icon icon="option.like" class="heart" size="32"></sw-icon>
+            <sw-icon icon="option.share" class="heart" size="32"></sw-icon>
         `;
   }
   static get observedAttributes() {
@@ -1059,11 +1101,15 @@ customElements.define("sw-interface-options", class extends HTMLElement {
 // todo: title element 분할
 // video player 관련 icon 추가
 customElements.define("sw-interface-header", class extends HTMLElement {
+  // currentVideoElement = getCanvas(this).videoElement
   connectedCallback() {
     this.innerHTML = `
             <div class="interface-title">Title1</div>
-<!--            <sw-icon icon="elipsis"></sw-icon>-->
-            <sw-icon icon=router.close style="position: absolute; right: 0;"></sw-icon>
+            <div class="sw-interface-header-icons">
+                <sw-icon icon="video.mute" size="32"></sw-icon>
+                <sw-icon icon="video.play" size="28"></sw-icon>
+                <sw-icon icon=router.close size="28"></sw-icon>
+            </div>
         `;
     window.addEventListener("resize", () => {
       const titleBar = this.querySelector(".interface-title");
@@ -1076,6 +1122,15 @@ customElements.define("sw-interface-header", class extends HTMLElement {
     return ["current-feed-id"];
   }
   attributeChangedCallback(name, oldValue, newValue) {
+    // 전에 pause 상태 였다면 reset
+    this.innerHTML = `
+            <div class="interface-title">Title1</div>
+            <div class="sw-interface-header-icons">
+                <sw-icon icon="video.mute" size="32"></sw-icon>
+                <sw-icon icon="video.play" size="28"></sw-icon>
+                <sw-icon icon=router.close size="28"></sw-icon>
+            </div>
+        `;
     // 캔버스 내 폰트는 모두 일괄 적용 되도록 추후 수정
     // connected 일 경우 다시 열었을 때 인식 되지 않음
     const titleBar = this.querySelector(".interface-title");
@@ -1097,19 +1152,38 @@ customElements.define("sw-interface", class extends HTMLElement {
         `;
   }
 });
+function checkPostingsIndex(element) {
+  const viewElement = element.closest("sw-view");
+  const storyId = viewElement.getAttribute("story-id");
+  const storyStore = getStoryStore(element);
+  const currentIndex = storyStore.getIndexById(storyId);
+  const isFirstIndex = currentIndex === 0;
+  const isLastIndex = currentIndex === storyStore.stories.length - 1;
+  return [isFirstIndex, isLastIndex];
+}
 customElements.define("sw-controller", class extends HTMLElement {
   constructor() {
     super(...arguments);
     this.storyStore = getStoryStore(this);
+    // postingChangedCallback() {
+    //     const [isFirstIndex, isLastIndex] = checkPostingsIndex(this)
+    //     this.render({isFirstIndex, isLastIndex})
+    // }
   }
   connectedCallback() {
-    const storyId = this.getAttribute("story-id");
-    const storyIdIndex = this.storyStore.getIndexById(storyId);
-    const isFirstIndex = storyIdIndex === 0;
-    const isLastIndex = storyIdIndex === this.storyStore.stories.length - 1;
+    const [isFirstIndex, isLastIndex] = checkPostingsIndex(this);
     this.innerHTML = `
-            <sw-icon icon="router.arrow.left" size="32" visible=${isFirstIndex}></sw-icon>
-            <sw-icon icon="router.arrow.right" size="32" visible=${isLastIndex}></sw-icon>
+            <sw-icon icon="router.arrow.left" size="32" visible=${!isFirstIndex}></sw-icon>
+            <sw-icon icon="router.arrow.right" size="32" visible=${!isLastIndex}></sw-icon>
+        `;
+  }
+  render({
+    isFirstIndex,
+    isLastIndex
+  }) {
+    this.innerHTML = `
+            <sw-icon style="border: 1px solid red" icon="router.arrow.left" size="32"></sw-icon>
+            <sw-icon icon="router.arrow.right" size="32" ></sw-icon>
         `;
   }
 });
@@ -1126,7 +1200,7 @@ customElements.define("sw-view", class extends HTMLElement {
                 <sw-canvas></sw-canvas>
                 <sw-interface></sw-interface>
             </div>
-            <sw-controller story-id=${this.getAttribute("story-id")}></sw-controller>
+            <sw-controller></sw-controller>
         `;
     this.insertAdjacentHTML("afterbegin", `
             <div class="view-thumbnail">
@@ -1156,6 +1230,11 @@ customElements.define("sw-slider", class extends HTMLElement {
     this.innerHTML = `<sw-view-group></sw-view-group>`;
     resizeDetector.whenResize(() => slide.call(this, "resize"));
     new Gesture(this, mobileSlideEvent);
+    // todo: 레이어 클릭 시 닫힘 처리
+    this.addEventListener("click", event => {
+      const isLayerClicked = event.target === event.currentTarget;
+      if (isLayerClicked) return toggleLayerOpen(this);
+    });
   }
 });
 customElements.define("sw-embed", class extends HTMLElement {
@@ -1198,6 +1277,7 @@ customElements.define("sw-ui", class extends HTMLElement {
     const type = getRootAttribute("type", "group");
     const shape = getRootAttribute("shape", "story");
     const shownStories = type === "group" ? this.stories : [this.stories[0]];
+    this.style.margin = "12px";
     if (shape === "story" || shape === "shorts") {
       this.innerHTML = shownStories.map(shownStory => `<sw-${shape} story-id=${shownStory.id}></sw-${shape}>`).join("");
     }
@@ -1217,11 +1297,6 @@ customElements.define("sw-layer", class extends HTMLElement {
             <sw-icon icon="router.back" class="router-back"></sw-icon>
             <sw-slider></sw-slider>
         `;
-    // todo: 레이어 클릭 시 닫힘 처리
-    this.addEventListener("click", event => {
-      const isLayerClicked = event.target === event.currentTarget;
-      if (isLayerClicked) return toggleLayerOpen(this);
-    });
   }
 });
 const story = (size, borderStartColor, borderEndColor) => `
@@ -1261,7 +1336,7 @@ customElements.define("sw-skeleton", class extends HTMLElement {
     this.innerHTML = skeletons[shape](size, this.properties["border-start-color"], this.properties["border-end-color"]).repeat(repeatCount);
   }
 });
-var styles = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scrollbar-width: none;\n    -webkit-user-drag: none;\n    font-size: 14px;\n}\n\n*::-webkit-scrollbar {\n    display: none;\n}\n\nsw-canvas {\n    position: absolute;\n    top: 0;\n    left: 0;\n    height: 100%;\n    width: 100%;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n\n\n    box-sizing: border-box;\n    /*border: 1px solid red;*/\n}\n\nsw-element {\n    position: absolute;\n    overflow: hidden;\n}\n\n.content {\n    position: relative;\n    width: 100%;\n    height: 100%;\n    object-fit: fill;\n}\n\n.video-content {\n    object-fit: contain;\n}\n\n.scene {\n    position: relative;\n    width: 100%;\n    height: 100%;\n}\n\n/* default 스타일 적용된 점 확인 필요 */\n\n.sw-text-element {\n    opacity: 80%;\n    /*padding-block: 12px;*/\n    padding-inline: 4px;\n    border-radius: 4px;\n}\n\nsw-controller {\n    position: absolute;\n    width: 144%;\n    height: 0;\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    align-items: center;\n\n    @container slider (max-width: 768px) {\n        visibility: hidden\n    }\n}\n\n.interface {\n    position: absolute;\n\n    display: flex;\n    flex-direction: column;\n\n    padding-inline: 4%;\n    padding-block: 8%;\n    box-sizing: border-box;\n\n    width: 100%;\n    height: 100%;\n\n}\n\nsw-interface-header {\n    top: 2%;\n    position: relative;\n    display: flex;\n}\n\nsw-interface-options {\n    margin-top: auto;\n    position: relative;\n    bottom: 4%;\n    display: flex;\n    align-self: flex-end;\n    justify-content: flex-end;\n    flex-direction: column;\n    gap: 4%;\n    height: 100%;\n}\n\n.interface-title {\n    position: relative;\n    color: white;\n    font-weight: 700;\n    font-size: 12px;\n    left: 1%;\n\n    @media (max-width: 500px) {\n            font-size: 24px;\n    }\n}\n\n.timeline {\n    width: 100%;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 2px;\n    box-sizing: border-box;\n    padding-inline: 2px;\n    position: relative;\n}\n\nsw-progress {\n    border-radius: 1px;\n    height: 2px;\n    width: 100%;\n    background-color: rgba(255, 255, 255, 0.48);\n    overflow: hidden;\n}\n\n.gauge {\n    border-radius: 1px;\n    height: 100%;\n    width: 0;\n    background-color: #FFFFFF;\n}\n\n.view {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-shrink: 0;\n\n    position: relative;\n    width: 100%;\n\n    /*border-radius: 6px;*/\n\n    cursor: pointer;\n    transition: transform 0.4s;\n}\n\n.view-inner {\n\n    position: relative;\n\n    aspect-ratio: 9/16;\n    border-radius: 6px;\n\n    height: 100%;\n    width: auto;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n\n    background-color: #000000;\n\n    box-sizing: border-box;\n    border: 1px solid #828282;\n\n\n    @media (max-width: 768px), (max-height: 500px) {\n        border-radius: 0;\n        border: none;\n    }\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n\n    background-color: black;\n}\n\nsw-view-group {\n    /* position */\n    position: relative;\n    left: 0;\n\n    /* layout */\n    display: flex;\n    flex-direction: row;\n    gap: 220px;\n\n    /* size */\n    width: 260px;\n    height: auto;\n\n    aspect-ratio: 9/16;\n\n    @media (max-width: 768px), (max-height: 500px) {\n            width: 100%;\n            height: 100%;\n            gap: 0;\n    }\n}\n\nsw-layer {\n    position: fixed;\n    height: -webkit-fill-available;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    sw-layer {\n        background-color: #000000;\n    }\n}\n\n/*@supports (-webkit-touch-callout: none) {*/\n\n/*    height: -webkit-fill-available;*/\n\n/*}*/\n\nsw-slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    box-sizing: border-box;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}\n\nsw-story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n    flex-shrink: 0;\n\n}\n\n.story-icon {    \n    position: relative;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\n.story-label {\n    /*position*/\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}\n\nsw-shorts {\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n    flex-shrink: 0;\n}\n\nsw-shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\nsw-shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}\n\nsw-embed {\n    position: relative;\n    width: 400px;\n    aspect-ratio: 9/16;\n}\n\nsw-embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n    border-radius: 4px;\n}\n\nsw-ui, sw-skeleton {\n    display: flex;\n    flex-direction: row;\n    gap: 12px;\n    overflow: scroll;\n    width: 100%;\n}\n\n.skeleton-story {\n    flex-shrink: 0;\n    position: relative;\n    border-radius: 50%;\n\n    aspect-ratio: 1/1;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n}\n\n.skeleton-border {\n    width: 93%;\n    height:  93%;\n    background-color: #FFFFFF;\n    border-radius: 50%;\n\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.skeleton-image {\n    width: 94%;\n    height: 94%;\n    border-radius: 50%;\n\n    background-color: #3232393D;\n    overflow: hidden;\n\n}\n\n.skeleton-shorts {\n    background-color: rgba(50, 50, 57, 0.24);\n    aspect-ratio: 9/16;\n    border-radius: 8px;\n}\n\nsw-icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 999;\n    color: rgba(255, 255, 255, 0.48);\n    position: relative;\n    height: 16px;\n    width: 16px;\n}\n\n@media (max-width: 768px) {\n    sw-icon {\n        height: 32px;\n        width: 32px;\n    }\n}\n\nsw-icon:hover {\n    color: white\n}\n\n.icon-container {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    justify-content: end;\n    gap: 4px;\n}\n\n.outer-close {\n    position: absolute;\n    top: 0;\n    right: 0;\n    height: 32px;\n    width: 32px;\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    .outer-close {\n        display: none;\n    }\n}\n\n.arrow {\n    position: relative;\n    height: 32px;\n    width: 32px;\n}\n\n.heart {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.share {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.router-back {\n    position: absolute;\n    right: 1%;\n    top: 1%;\n    height: 32px;\n    width: 32px;\n\n    @media (max-width: 768px), (max-height: 500px) {\n        display: none;\n    }\n}\n";
+var styles = "* {\n    user-select: none;\n    -moz-user-select: none;\n    scrollbar-width: none;\n    -webkit-user-drag: none;\n    font-size: 14px;\n}\n\n*::-webkit-scrollbar {\n    display: none;\n}\n\nsw-canvas {\n    position: absolute;\n    top: 0;\n    left: 0;\n    height: 100%;\n    width: 100%;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n\n\n    box-sizing: border-box;\n    /*border: 1px solid red;*/\n}\n\nsw-element {\n    position: absolute;\n    overflow: hidden;\n}\n\n.content {\n    position: relative;\n    width: 100%;\n    height: 100%;\n    object-fit: fill;\n}\n\n.video-content {\n    object-fit: contain;\n}\n\n.scene {\n    position: relative;\n    width: 100%;\n    height: 100%;\n}\n\n/* default 스타일 적용된 점 확인 필요 */\n\n.sw-text-element {\n    opacity: 80%;\n    /*padding-block: 12px;*/\n    padding-inline: 4px;\n    border-radius: 4px;\n}\n\nsw-controller {\n    position: absolute;\n    width: 144%;\n    height: 0;\n    display: flex;\n    flex-direction: row;\n    justify-content: space-between;\n    align-items: center;\n\n    @container slider (max-width: 768px) {\n        visibility: hidden\n    }\n}\n\n.interface {\n    position: absolute;\n\n    display: flex;\n    flex-direction: column;\n\n    padding-inline: 4%;\n    padding-block: 8%;\n    box-sizing: border-box;\n\n    width: 100%;\n    height: 100%;\n\n}\n\nsw-interface-header {\n    top: 2%;\n    position: relative;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n}\n\n.sw-interface-header-icons {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    /*justify-content: space-around;*/\n    justify-content: flex-end;\n    gap: 8%;\n    width: 40%;\n}\n\nsw-interface-options {\n    margin-top: auto;\n    position: relative;\n    bottom: 4%;\n    display: flex;\n    align-self: flex-end;\n    justify-content: flex-end;\n    flex-direction: column;\n    gap: 4%;\n    height: 100%;\n}\n\n.interface-title {\n    position: relative;\n    color: white;\n    font-weight: 700;\n    font-size: 12px;\n    left: 1%;\n\n    @media (max-width: 500px) {\n            font-size: 24px;\n    }\n}\n\n.timeline {\n    width: 100%;\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    gap: 2px;\n    box-sizing: border-box;\n    padding-inline: 2px;\n    position: relative;\n}\n\nsw-progress {\n    border-radius: 1px;\n    height: 2px;\n    width: 100%;\n    background-color: rgba(255, 255, 255, 0.48);\n    overflow: hidden;\n}\n\n.gauge {\n    border-radius: 1px;\n    height: 100%;\n    width: 0;\n    background-color: #FFFFFF;\n}\n\n.view {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-shrink: 0;\n\n    position: relative;\n    width: 100%;\n\n    /*border-radius: 6px;*/\n\n    cursor: pointer;\n    transition: transform 0.4s;\n}\n\n.view-inner {\n\n    position: relative;\n\n    aspect-ratio: 9/16;\n    border-radius: 6px;\n\n    height: 100%;\n    width: auto;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n\n    background-color: #000000;\n\n    box-sizing: border-box;\n    border: 1px solid #828282;\n\n\n    @media (max-width: 768px), (max-height: 500px) {\n        border-radius: 0;\n        border: none;\n    }\n}\n\n.view-thumbnail {\n    position: absolute;\n    height: 100%;\n    width: 100%;\n\n    z-index: 99;\n    border-radius: 6px;\n    box-sizing: border-box;\n    object-fit: cover;\n\n    background-color: black;\n}\n\nsw-view-group {\n    /* position */\n    position: relative;\n    left: 0;\n\n    /* layout */\n    display: flex;\n    flex-direction: row;\n    gap: 220px;\n\n    /* size */\n    width: auto;\n    height: 100vh;\n\n    aspect-ratio: 9/16;\n\n    @media (max-width: 768px), (max-height: 500px) {\n            width: 100%;\n            height: 100%;\n            gap: 0;\n    }\n}\n\nsw-layer {\n    position: fixed;\n    height: -webkit-fill-available;\n    width: 100vw;\n    z-index: 999;\n    top: 0;\n    left: 0;\n    background-color: rgb(0,0,0,0.5);\n    box-sizing: border-box;\n\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    sw-layer {\n        background-color: #000000;\n    }\n}\n\n/*@supports (-webkit-touch-callout: none) {*/\n\n/*    height: -webkit-fill-available;*/\n\n/*}*/\n\nsw-slider {\n    position: absolute;\n    top: 0;\n    left: 0;\n\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n\n    box-sizing: border-box;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    container-name: slider;\n    container-type: inline-size;\n}\n\nsw-story {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    cursor: pointer;\n    gap: 8px;\n    flex-shrink: 0;\n\n}\n\n.story-icon {    \n    position: relative;\n\n    display: flex;\n    justify-content: center;\n\n    padding: 0.25rem;\n\n    border-radius: 50%;\n    border: 0.25rem solid transparent;\n    background-image: linear-gradient(white, white), linear-gradient(0deg,  #EC702B, #BC3BE9);\n    background-origin: border-box;\n    background-clip: padding-box, border-box;\n}\n\n.story-image {\n    width: 100%;\n    aspect-ratio: 1/1;\n    border-radius: 50%;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\n.story-label {\n    /*position*/\n    position: absolute;\n    bottom: -8px;\n    /*color*/\n    background: linear-gradient(0deg, #EC702B, #BC3BE9);\n    color: #FFFF;\n    /*size*/\n    border: 0.2rem solid #FFFF;\n    border-radius: 0.25rem;\n    padding: 0.2rem;\n}\n\n.story-title {\n    color: black;\n}\n\nsw-shorts {\n    aspect-ratio: 9/16;\n    overflow: hidden;\n    cursor: pointer;\n    border-radius: 12px;\n    position: relative;\n    box-sizing: border-box;\n    flex-shrink: 0;\n}\n\nsw-shorts:hover {\n    background-color: #000000;\n}\n\n.shorts-image, .shorts-preview {\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    left: 0;\n    top: 0;\n    object-fit: cover;\n\n    background-color: #3232393D;\n}\n\nsw-shorts:hover .shorts-image {\n    display: none;\n}\n\n@keyframes fade { from {opacity: 0} to {opacity: 1} }\n\n.shorts-preview {\n    animation: fade 0.5s;\n    animation-fill-mode: forwards;\n}\n\nsw-embed {\n    position: relative;\n    width: 400px;\n    aspect-ratio: 9/16;\n}\n\nsw-embed:hover .embed-thumbnail {\n    display: none;\n}\n\n.embed-thumbnail {\n    width: 100%;\n    height: 100%;\n    z-index: 1;\n    position: absolute;\n    object-fit: cover;\n    border-radius: 4px;\n}\n\nsw-ui, sw-skeleton {\n    display: flex;\n    flex-direction: row;\n    gap: 12px;\n    overflow: scroll;\n    width: 100%;\n}\n\n.skeleton-story {\n    flex-shrink: 0;\n    position: relative;\n    border-radius: 50%;\n\n    aspect-ratio: 1/1;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    overflow: hidden;\n}\n\n.skeleton-border {\n    width: 93%;\n    height:  93%;\n    background-color: #FFFFFF;\n    border-radius: 50%;\n\n    overflow: hidden;\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.skeleton-image {\n    width: 94%;\n    height: 94%;\n    border-radius: 50%;\n\n    background-color: #3232393D;\n    overflow: hidden;\n\n}\n\n.skeleton-shorts {\n    background-color: rgba(50, 50, 57, 0.24);\n    aspect-ratio: 9/16;\n    border-radius: 8px;\n    flex-shrink: 0;\n}\n\nsw-icon {\n    display: flex;\n    cursor: pointer;\n    z-index: 999;\n    color: rgba(255, 255, 255, 0.48);\n    position: relative;\n    height: 16px;\n    width: 16px;\n}\n\n@media (max-width: 768px) {\n    sw-icon {\n        height: 32px;\n        width: 32px;\n    }\n}\n\nsw-icon:hover {\n    color: white\n}\n\n.icon-container {\n    display: flex;\n    flex-direction: row;\n    align-items: center;\n    justify-content: end;\n    gap: 4px;\n}\n\n.outer-close {\n    position: absolute;\n    top: 0;\n    right: 0;\n    height: 32px;\n    width: 32px;\n}\n\n@media (max-width: 768px), (max-height: 500px) {\n    .outer-close {\n        display: none;\n    }\n}\n\n.arrow {\n    position: relative;\n    height: 32px;\n    width: 32px;\n}\n\n.heart {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.share {\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 50%;\n    padding: 4px;\n}\n\n.router-back {\n    position: absolute;\n    right: 1%;\n    top: 1%;\n    height: 32px;\n    width: 32px;\n\n    @media (max-width: 768px), (max-height: 500px) {\n        display: none;\n    }\n}\n";
 class Shortsworks extends HTMLElement {
   constructor() {
     super(...arguments);
@@ -1290,10 +1365,22 @@ class Shortsworks extends HTMLElement {
     const styleSheet = document.createElement("style");
     styleSheet.textContent = styles;
     this.document.appendChild(styleSheet);
+    // skeleton UI 에도 default margin 필요
+    // this.style.border = "1px solid red"
     // fetch data
-    if (this.getAttribute("key") === null) return;
-    const data = await getContentsWithAccessToken(this.getAttribute("key"));
+    if (this.getAttribute("access-key") === null) return;
+    const data = await getContentsWithAccessToken(this.getAttribute("access-key"));
+    console.log(data);
     this.setData(data);
+    this.render();
+    // 내부에서 직접 등록하는 방향
+    if (this.getAttribute("settings") === null) return;
+    const settings = JSON.parse(this.getAttribute("settings"));
+    // 묶어서 적용 필요
+    this.setAttribute("shape", settings.widgetShape);
+    this.setAttribute("border-start-color", settings.widgetStartColor);
+    this.setAttribute("border-end-color", settings.widgetEndColor);
+    this.setAttribute("size", settings.widgetSize);
     this.render();
   }
   render() {
