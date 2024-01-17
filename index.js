@@ -1359,6 +1359,7 @@ class Shortsworks extends HTMLElement {
     this.hasContents = true;
   }
   async connectedCallback() {
+    this.document.innerHTML = "";
     const widget = document.createElement("div");
     this.document.appendChild(widget);
     this.widget = widget;
@@ -1368,9 +1369,9 @@ class Shortsworks extends HTMLElement {
     // skeleton UI 에도 default margin 필요
     // this.style.border = "1px solid red"
     // fetch data
+    console.log(this.getAttribute("access-key"));
     if (this.getAttribute("access-key") === null) return;
     const data = await getContentsWithAccessToken(this.getAttribute("access-key"));
-    console.log(data);
     this.setData(data);
     this.render();
     // 내부에서 직접 등록하는 방향
