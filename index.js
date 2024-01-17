@@ -1277,7 +1277,7 @@ customElements.define("sw-ui", class extends HTMLElement {
     const type = getRootAttribute("type", "group");
     const shape = getRootAttribute("shape", "story");
     const shownStories = type === "group" ? this.stories : [this.stories[0]];
-    this.style.margin = "12px";
+    this.style.padding = "12px";
     if (shape === "story" || shape === "shorts") {
       this.innerHTML = shownStories.map(shownStory => `<sw-${shape} story-id=${shownStory.id}></sw-${shape}>`).join("");
     }
@@ -1367,7 +1367,6 @@ class Shortsworks extends HTMLElement {
     styleSheet.textContent = styles;
     this.document.appendChild(styleSheet);
     // skeleton UI 에도 default margin 필요
-    // this.style.border = "1px solid red"
     // fetch data
     console.log(this.getAttribute("access-key"));
     if (this.getAttribute("access-key") === null) return;
